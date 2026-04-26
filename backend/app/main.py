@@ -9,7 +9,13 @@ from .reporting import build_pdf_report
 
 settings=get_settings()
 app=FastAPI(title="Aegis Comply API", version="1.0.0")
-app.add_middleware(CORSMiddleware, allow_origins=[x.strip() for x in settings.cors_origins.split(',')], allow_credentials=True, allow_methods=['*'], allow_headers=['*'])
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 sanctions=SanctionsAdapter()
 registry=RegistryAdapter()
