@@ -1,0 +1,1849 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+ <meta charset="UTF-8"/>
+ <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+ <title>Aegis Comply — RegTech для двойного комплаенса</title>
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+ <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+ <style>
+ :root {
+ --bg:#f6f8fc; --bg2:#eef3f8; --bg3:#e5ecf5;
+ --surface:#ffffff; --surface2:#f8fafc;
+ --border:rgba(15,23,42,0.10); --border2:rgba(37,99,235,0.28);
+ --text:#102033; --text-dim:#526174; --text-dimmer:#7b8794;
+ --accent:#1d4ed8; --accent2:#2563eb; --accent-glow:rgba(37,99,235,0.16);
+ --gold:#f59e0b; --green:#10b981; --red:#ef4444; --orange:#f97316;
+ --purple:#8b5cf6;
+ --font-display:'Syne',sans-serif; --font-body:'DM Sans',sans-serif; --font-mono:'DM Mono',monospace;
+ }
+ *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+ html{scroll-behavior:smooth}
+ body{background:var(--bg);color:var(--text);font-family:var(--font-body);font-size:15px;line-height:1.65;overflow-x:hidden}
+ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:radial-gradient(ellipse 60% 50% at 10% 20%,rgba(37,99,235,0.06) 0%,transparent 60%),radial-gradient(ellipse 40% 40% at 90% 80%,rgba(245,158,11,0.035) 0%,transparent 60%);pointer-events:none}
+
+ /* NAV */
+ nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:14px 50px;background:rgba(255,255,255,0.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
+ .nav-logo{display:flex;align-items:center;gap:10px;font-family:var(--font-display);font-size:19px;font-weight:800;color:var(--text);text-decoration:none;letter-spacing:-0.5px}
+ .nav-shield{width:32px;height:32px;background:linear-gradient(135deg,var(--accent),#1e40af);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;box-shadow:0 0 18px var(--accent-glow)}
+ .nav-links{display:flex;align-items:center;gap:4px}
+ .nav-links a{color:var(--text-dim);text-decoration:none;font-size:13px;padding:6px 12px;border-radius:6px;transition:all .2s}
+ .nav-links a:hover{color:var(--text);background:var(--surface2)}
+ .nav-cta{background:var(--accent)!important;color:#fff!important;font-weight:600;box-shadow:0 0 18px var(--accent-glow)}
+ .nav-cta:hover{filter:brightness(1.1)}
+
+ /* HERO */
+ .hero{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:140px 60px 80px;overflow:hidden}
+ .hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(59,130,246,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(59,130,246,0.04) 1px,transparent 1px);background-size:60px 60px;mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 40%,transparent 100%)}
+ .hero-tag{display:inline-flex;align-items:center;gap:8px;padding:5px 14px;border-radius:999px;border:1px solid rgba(59,130,246,0.3);background:rgba(37,99,235,0.06);color:var(--accent2);font-size:11px;font-weight:600;font-family:var(--font-mono);letter-spacing:.5px;margin-bottom:28px;width:fit-content}
+ .hero h1{font-family:var(--font-display);font-size:clamp(44px,6.5vw,82px);font-weight:800;line-height:1.0;letter-spacing:-2px;color:var(--text);margin-bottom:12px;position:relative;z-index:1}
+ .grad{background:linear-gradient(135deg,#60a5fa 0%,#a78bfa 50%,#34d399 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+ .hero-sub{font-size:17px;color:var(--text-dim);font-weight:300;max-width:540px;line-height:1.6;margin-bottom:40px;position:relative;z-index:1}
+ .hero-btns{display:flex;gap:14px;flex-wrap:wrap;position:relative;z-index:1}
+ .btn-p{display:inline-flex;align-items:center;gap:8px;padding:13px 26px;border-radius:10px;background:var(--accent);color:#fff;font-weight:600;font-size:14px;text-decoration:none;box-shadow:0 0 28px var(--accent-glow);transition:all .2s;border:none;cursor:pointer}
+ .btn-p:hover{filter:brightness(1.1);transform:translateY(-1px)}
+ .btn-s{display:inline-flex;align-items:center;gap:8px;padding:13px 26px;border-radius:10px;background:var(--surface2);color:var(--text);font-weight:500;font-size:14px;text-decoration:none;border:1px solid var(--border);cursor:pointer;transition:all .2s}
+ .btn-s:hover{background:rgba(255,255,255,0.1);border-color:var(--border2)}
+ .hero-stats{display:flex;gap:44px;margin-top:60px;padding-top:36px;border-top:1px solid var(--border);position:relative;z-index:1;flex-wrap:wrap}
+ .stat-n{font-family:var(--font-display);font-size:34px;font-weight:800;letter-spacing:-1px}
+ .stat-n span{color:var(--accent2)}
+ .stat-l{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-top:2px}
+
+ /* SECTIONS */
+ section{position:relative;z-index:1;padding:90px 60px}
+ .stag{font-family:var(--font-mono);font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:2px;margin-bottom:14px;display:block}
+ h2{font-family:var(--font-display);font-size:clamp(26px,3.5vw,40px);font-weight:800;letter-spacing:-1px;line-height:1.1;color:var(--text);margin-bottom:18px}
+ .slead{font-size:16px;color:var(--text-dim);max-width:540px;line-height:1.7;margin-bottom:52px}
+
+ /* CLIENT SEGMENTS */
+ .segments{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+ .seg{padding:28px;border-radius:18px;border:1px solid var(--border);background:var(--surface);transition:all .3s;cursor:default}
+ .seg:hover{border-color:var(--border2);transform:translateY(-2px);background:rgba(59,130,246,0.04)}
+ .seg-icon{font-size:32px;margin-bottom:16px}
+ .seg h3{font-family:var(--font-display);font-size:17px;font-weight:700;margin-bottom:10px}
+ .seg p{font-size:13.5px;color:var(--text-dim);line-height:1.65;margin-bottom:14px}
+ .seg-tags{display:flex;flex-wrap:wrap;gap:6px}
+ .seg-tag{font-size:11px;font-family:var(--font-mono);padding:3px 9px;border-radius:999px;background:rgba(37,99,235,0.06);border:1px solid rgba(59,130,246,0.2);color:var(--accent2)}
+
+ /* PROBLEM */
+ .prob-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border-radius:18px;overflow:hidden;border:1px solid var(--border)}
+ .prob-card{background:var(--bg2);padding:32px;transition:background .2s}
+ .prob-card:hover{background:var(--surface2)}
+ .prob-num{font-family:var(--font-mono);font-size:10px;color:var(--text-dimmer);margin-bottom:16px;display:block}
+ .prob-icon{font-size:26px;margin-bottom:14px;display:block}
+
+ /* FORMS */
+ .form-group{margin-bottom:16px}
+ .form-label{display:block;font-size:11px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.8px;margin-bottom:7px;font-family:var(--font-mono)}
+ .form-input{width:100%;padding:10px 13px;background:#ffffff;border:1px solid rgba(15,23,42,0.14);border-radius:8px;color:#102033;font-size:14px;font-family:var(--font-body);outline:none;transition:border-color .2s}
+ .form-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+ select.form-input{cursor:pointer}
+ select.form-input option{background:#ffffff;color:#102033}
+ .run-btn{width:100%;padding:12px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#1e40af);color:#fff;font-family:var(--font-display);font-weight:700;font-size:14px;border:none;cursor:pointer;margin-top:16px;box-shadow:0 0 26px var(--accent-glow);transition:all .2s;letter-spacing:.2px}
+ .run-btn:hover{filter:brightness(1.1);transform:translateY(-1px)}
+ .run-btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
+
+ /* DEMO PANEL */
+ .demo-panel{background:var(--bg);border:1px solid var(--border);border-radius:20px;overflow:hidden}
+ .demo-topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 22px;border-bottom:1px solid var(--border);background:rgba(255,255,255,0.02)}
+ .demo-dots{display:flex;gap:5px}
+ .demo-dots span{width:10px;height:10px;border-radius:50%}
+ .dot-r{background:#ff5f57}.dot-y{background:#febc2e}.dot-g{background:#28c840}
+ .demo-title{font-family:var(--font-mono);font-size:12px;color:var(--text-dim)}
+ .demo-badge{font-family:var(--font-mono);font-size:10px;color:var(--accent2);background:rgba(37,99,235,0.06);padding:3px 9px;border-radius:999px;border:1px solid rgba(59,130,246,0.2)}
+ .demo-body{display:grid;grid-template-columns:1fr 1fr}
+ .demo-form{padding:28px;border-right:1px solid var(--border)}
+ .demo-result{padding:28px}
+ .demo-form h3,.demo-result h3{font-family:var(--font-mono);font-size:11px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:20px}
+
+ /* SCORE */
+ .result-total{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:22px;border-radius:14px;margin-bottom:16px;border:1px solid var(--border);background:var(--surface);text-align:center}
+ .rtl{font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;font-family:var(--font-mono)}
+ .rsb{font-family:var(--font-display);font-size:48px;font-weight:800;line-height:1;letter-spacing:-2px}
+ .rlv{font-size:12px;font-weight:600;margin-top:7px;padding:3px 12px;border-radius:999px}
+ .lvl-low{background:rgba(16,185,129,.15);color:var(--green)}
+ .lvl-med{background:rgba(245,158,11,.15);color:var(--gold)}
+ .lvl-high{background:rgba(249,115,22,.15);color:var(--orange)}
+ .lvl-crit{background:rgba(239,68,68,.15);color:var(--red)}
+ .rck{display:flex;flex-direction:column;gap:9px}
+ .rck-row{display:flex;justify-content:space-between;align-items:center;padding:9px 13px;border-radius:8px;background:var(--surface);border:1px solid var(--border)}
+ .rck-name{font-size:13px;color:var(--text-dim)}
+ .rck-val{font-family:var(--font-mono);font-size:12px;font-weight:600}
+ .vl{color:var(--green)}.vm{color:var(--gold)}.vh{color:var(--orange)}.vc{color:var(--red)}
+
+ /* FEATURES */
+ .feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+ .feat{padding:28px;border-radius:16px;background:var(--surface);border:1px solid var(--border);transition:all .3s}
+ .feat:hover{border-color:var(--border2);background:rgba(59,130,246,0.04);transform:translateY(-2px)}
+ .feat-icon{width:44px;height:44px;border-radius:11px;background:var(--accent-glow);border:1px solid rgba(59,130,246,.3);display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:18px}
+
+ /* MARKET */
+ .mkt-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:50px}
+ .mkt-card{padding:26px;border-radius:16px;background:var(--surface);border:1px solid var(--border);text-align:center}
+ .mkt-num{font-family:var(--font-display);font-size:34px;font-weight:800;letter-spacing:-1px;color:var(--text);margin-bottom:6px}
+ .mkt-num span{color:var(--accent2)}
+
+ /* COMP TABLE */
+ .comp-table{width:100%;border-collapse:separate;border-spacing:0;border-radius:16px;overflow:hidden;border:1px solid var(--border)}
+ .comp-table th{padding:12px 18px;background:var(--surface2);font-family:var(--font-mono);font-size:10px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;text-align:left;border-bottom:1px solid var(--border)}
+ .comp-table td{padding:12px 18px;font-size:13px;color:var(--text-dim);border-bottom:1px solid var(--border);vertical-align:middle}
+ .comp-table tr:last-child td{border-bottom:none}
+ .comp-table tr.our td{background:rgba(59,130,246,.06);color:var(--text)}
+ .comp-table tr.our td:first-child{color:var(--accent2);font-weight:700}
+ .cy{color:var(--green)}.cn{color:var(--text-dimmer)}.cp{color:var(--gold)}
+
+ /* ANALYTICAL CABINET - WIZARD */
+ .wizard{background:var(--bg);border:1px solid var(--border);border-radius:20px;overflow:hidden}
+ .wiz-header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0}
+ .wiz-steps{display:flex;overflow-x:auto}
+ .wiz-step{flex:1;min-width:120px;padding:16px 14px;text-align:center;cursor:pointer;border-right:1px solid var(--border);transition:all .2s;position:relative}
+ .wiz-step:last-child{border-right:none}
+ .wiz-step.active{background:rgba(59,130,246,.1);border-bottom:2px solid var(--accent)}
+ .wiz-step.done{background:rgba(16,185,129,.06)}
+ .wiz-step.done::after{content:'';position:absolute;top:8px;right:8px;font-size:10px;color:var(--green)}
+ .wiz-step-num{font-family:var(--font-mono);font-size:10px;color:var(--text-dimmer);margin-bottom:4px}
+ .wiz-step-label{font-size:12px;font-weight:600;color:var(--text-dim)}
+ .wiz-step.active .wiz-step-label{color:var(--accent2)}
+ .wiz-step.done .wiz-step-label{color:var(--green)}
+ .wiz-body{padding:32px}
+ .wiz-panel{display:none}
+ .wiz-panel.active{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+ .wiz-panel.active.full{grid-template-columns:1fr}
+ .wiz-nav{display:flex;justify-content:space-between;align-items:center;padding:20px 32px;border-top:1px solid var(--border);background:var(--surface)}
+ .wiz-progress{font-family:var(--font-mono);font-size:11px;color:var(--text-dim)}
+ .wiz-btns{display:flex;gap:10px}
+ .wiz-btn-next{padding:10px 22px;border-radius:8px;background:var(--accent);color:#fff;font-weight:600;font-size:13px;border:none;cursor:pointer;transition:all .2s}
+ .wiz-btn-next:hover{filter:brightness(1.1)}
+ .wiz-btn-back{padding:10px 22px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text-dim);font-size:13px;cursor:pointer;transition:all .2s}
+ .wiz-btn-back:hover{color:var(--text);border-color:var(--border2)}
+ .info-box{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px}
+ .info-box h4{font-family:var(--font-display);font-size:15px;margin-bottom:10px}
+ .info-box p{font-size:13px;color:var(--text-dim);line-height:1.6}
+ .flag-item{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-radius:8px;margin-bottom:8px;border:1px solid var(--border)}
+ .flag-red{border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.05)}
+ .flag-yellow{border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.05)}
+ .flag-green{border-color:rgba(16,185,129,.3);background:rgba(16,185,129,.05)}
+ .flag-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+ .flag-text{font-size:13px;color:var(--text-dim);line-height:1.5}
+ .flag-text strong{color:var(--text)}
+
+ /* DOSIER */
+ .dossier-out{background:#ffffff;border:1px solid rgba(15,23,42,.12);border-radius:16px;padding:0;font-family:var(--font-body);font-size:14px;line-height:1.65;color:#102033;white-space:normal;max-height:520px;overflow-y:auto;box-shadow:0 18px 50px rgba(15,23,42,.08)}
+
+
+ .legal-report{padding:26px}
+ .legal-report-head{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;border-bottom:1px solid var(--border);padding-bottom:18px;margin-bottom:18px}
+ .legal-report-title{font-family:var(--font-display);font-size:22px;font-weight:800;letter-spacing:-.5px;color:var(--text)}
+ .legal-report-meta{font-family:var(--font-mono);font-size:11px;color:var(--text-dim);text-align:right;line-height:1.7}
+ .legal-status{display:inline-flex;padding:5px 11px;border-radius:999px;font-family:var(--font-mono);font-size:10px;font-weight:600;letter-spacing:.7px;background:rgba(245,158,11,.12);color:#92400e;border:1px solid rgba(245,158,11,.25)}
+ .legal-report-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0}
+ .legal-report-card{border:1px solid var(--border);background:#f8fafc;border-radius:12px;padding:16px}
+ .legal-report-card h5{font-family:var(--font-display);font-size:14px;margin-bottom:8px;color:var(--text)}
+ .legal-report-card p,.legal-report-card li{font-size:13px;color:var(--text-dim);line-height:1.6}
+ .legal-report-card ul{padding-left:16px;margin-top:8px}
+ .legal-risk-score{font-family:var(--font-display);font-size:40px;font-weight:800;letter-spacing:-1px;color:var(--accent)}
+ .legal-conclusion{border-left:4px solid var(--accent);background:#f8fafc;border-radius:0 12px 12px 0;padding:16px;margin-top:16px}
+ .legal-note{font-size:12px;color:var(--text-dimmer);margin-top:14px;border-top:1px solid var(--border);padding-top:12px}
+ .legal-method-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:36px}
+ .legal-method-card{background:#fff;border:1px solid var(--border);border-radius:16px;padding:22px;box-shadow:0 14px 34px rgba(15,23,42,.06)}
+ .legal-method-num{font-family:var(--font-mono);font-size:11px;color:var(--accent);letter-spacing:1px;margin-bottom:12px}
+ .legal-method-card h3{font-family:var(--font-display);font-size:16px;margin-bottom:10px}
+ .legal-method-card p{font-size:13.5px;color:var(--text-dim);line-height:1.65}
+
+ /* PAYMENT CORRIDOR */
+ .corridor-result{padding:20px;border-radius:14px;border:1px solid var(--border);background:var(--surface);margin-top:16px}
+ .corridor-bar{height:8px;border-radius:4px;overflow:hidden;background:var(--border);margin:12px 0}
+ .corridor-fill{height:100%;border-radius:4px;transition:width .8s ease}
+ .corridor-items{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+ .corridor-row{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:8px;background:var(--surface);border:1px solid var(--border);font-size:13px}
+ .corridor-label{color:var(--text-dim)}
+
+ /* ROUTE BUILDER */
+ .route-visual{position:relative;padding:24px;background:var(--surface);border-radius:14px;border:1px solid var(--border);margin-top:16px}
+ .route-nodes{display:flex;align-items:center;gap:0;flex-wrap:nowrap;overflow-x:auto;padding-bottom:8px}
+ .route-node{display:flex;flex-direction:column;align-items:center;min-width:80px}
+ .route-dot{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;border:1px solid var(--border);background:var(--bg);position:relative;z-index:1}
+ .route-dot.risk-low{border-color:var(--green);background:rgba(16,185,129,.1)}
+ .route-dot.risk-med{border-color:var(--gold);background:rgba(245,158,11,.1)}
+ .route-dot.risk-high{border-color:var(--orange);background:rgba(249,115,22,.1)}
+ .route-dot.risk-crit{border-color:var(--red);background:rgba(239,68,68,.1)}
+ .route-line{flex:1;height:2px;min-width:30px;margin:0 -4px;margin-bottom:24px;position:relative}
+ .route-line.solid{background:var(--green)}
+ .route-line.dashed{background:repeating-linear-gradient(90deg,var(--red) 0,var(--red) 6px,transparent 6px,transparent 12px)}
+ .route-line.dotted{background:repeating-linear-gradient(90deg,var(--gold) 0,var(--gold) 4px,transparent 4px,transparent 8px)}
+ .route-node-label{font-size:11px;color:var(--text-dim);margin-top:6px;text-align:center;max-width:80px}
+ .route-flag-list{display:flex;flex-direction:column;gap:7px;margin-top:16px}
+
+ /* SHADOW FLEET */
+ .vessel-flags{display:flex;flex-direction:column;gap:8px;margin-top:16px}
+ .vflag{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-radius:8px;border:1px solid var(--border)}
+ .vflag.vf-crit{border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.05)}
+ .vflag.vf-warn{border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.05)}
+ .vflag.vf-ok{border-color:rgba(16,185,129,.3);background:rgba(16,185,129,.05)}
+ #vesselMap{height:300px;border-radius:14px;border:1px solid var(--border);margin-top:16px;background:#0d1626}
+
+ /* ROADMAP */
+ .roadmap{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+ .road{padding:26px;border-radius:16px;border:1px solid var(--border);background:var(--surface);position:relative;overflow:hidden}
+ .road.cur{border-color:rgba(59,130,246,.4);background:rgba(59,130,246,.05)}
+ .road.cur::before{content:'СЕЙЧАС';position:absolute;top:14px;right:14px;font-family:var(--font-mono);font-size:9px;color:var(--accent2);background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.3);padding:2px 8px;border-radius:999px;letter-spacing:1px}
+ .road-period{font-family:var(--font-mono);font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:14px;display:block}
+ .road-trl{font-family:var(--font-display);font-size:38px;font-weight:800;letter-spacing:-2px;margin-bottom:10px;opacity:.25;color:var(--text-dim)}
+ .road.cur .road-trl{color:var(--accent2);opacity:1}
+ .road-items{list-style:none;display:flex;flex-direction:column;gap:7px}
+ .road-items li{font-size:13px;color:var(--text-dim);padding-left:14px;position:relative}
+ .road-items li::before{content:'→';position:absolute;left:0;color:var(--accent)}
+
+ /* TIMELINE */
+ .tl-wrap{position:relative;padding-left:36px}
+ .tl-wrap::before{content:'';position:absolute;left:14px;top:8px;bottom:0;width:2px;background:linear-gradient(180deg,var(--accent),transparent)}
+ .tl-item{position:relative;margin-bottom:20px}
+ .tl-dot{position:absolute;left:-30px;top:6px;width:12px;height:12px;border-radius:50%;border:2px solid var(--bg)}
+ .tl-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 20px;cursor:pointer;transition:all .2s}
+ .tl-card:hover{border-color:var(--border2)}
+ .tl-card.open{background:rgba(59,130,246,.04);border-color:var(--border2)}
+ .tl-top{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+ .tl-year{font-family:var(--font-mono);font-size:10px;padding:2px 8px;border-radius:999px;background:rgba(255,255,255,.06)}
+ .tl-title{font-family:var(--font-display);font-size:14px;font-weight:700}
+ .tl-body{font-size:13px;color:var(--text-dim);line-height:1.6;margin-top:10px;display:none}
+ .tl-card.open .tl-body{display:block}
+
+ /* TEAM */
+ .team-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+ .team-card{padding:28px;border-radius:16px;border:1px solid var(--border);background:var(--surface);text-align:center;transition:all .3s}
+ .team-card:hover{border-color:var(--border2);transform:translateY(-2px)}
+ .team-ava{width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,var(--accent),#1e40af);margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:20px;font-weight:800;color:#fff;letter-spacing:-1px}
+ .team-name{font-family:var(--font-display);font-size:16px;font-weight:700;margin-bottom:4px}
+ .team-role{font-size:11px;color:var(--accent2);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;font-family:var(--font-mono)}
+ .team-desc{font-size:13px;color:var(--text-dim);line-height:1.6}
+
+ /* ROI */
+ .roi-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+ .roi-card{padding:22px;border-radius:14px}
+ .roi-loss{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2)}
+ .roi-cost{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2)}
+ .roi-ratio{background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);text-align:center}
+ .roi-label{font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px}
+ .roi-num{font-family:var(--font-display);font-size:36px;font-weight:800;letter-spacing:-1px;line-height:1}
+ .roi-sub{font-size:12px;color:var(--text-dim);margin-top:6px}
+
+ /* SOURCE CHIPS */
+ .src-row{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:7px}
+ .src-chip{display:flex;align-items:center;gap:5px;padding:7px 9px;border-radius:7px;border:1px solid var(--border);background:var(--surface);cursor:pointer;transition:all .2s}
+ .src-chip input{accent-color:var(--accent)}
+ .src-chip span{font-size:11px;font-weight:600;color:var(--text-dim);font-family:var(--font-mono)}
+ .src-chip:has(input:checked){border-color:rgba(59,130,246,.4);background:rgba(59,130,246,.08)}
+ .src-chip:has(input:checked) span{color:var(--accent2)}
+
+ /* FOOTER */
+ footer{position:relative;z-index:1;padding:48px 60px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:20px}
+ .foot-brand{font-family:var(--font-display);font-size:17px;font-weight:800;letter-spacing:-.5px;margin-bottom:8px}
+ .foot-brand span{color:var(--accent2)}
+ .foot-note{font-size:12px;color:var(--text-dimmer);max-width:380px;line-height:1.6}
+ .foot-links{display:flex;gap:18px;flex-wrap:wrap}
+ .foot-links a{font-size:13px;color:var(--text-dim);text-decoration:none}
+ .foot-links a:hover{color:var(--text)}
+ .disclaimer{background:rgba(239,68,68,.04);border:1px solid rgba(239,68,68,.12);border-radius:14px;padding:18px 22px;font-size:12.5px;color:var(--text-dim);line-height:1.7;margin-top:48px}
+
+ /* UTILITY */
+ ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+ @media(max-width:900px){
+ nav{padding:13px 20px}.nav-links{display:none}
+ .hero,.section{padding:110px 20px 60px}.hero-stats{gap:22px}
+ section{padding:60px 20px}
+ .prob-grid,.feat-grid,.segments,.mkt-grid,.team-grid,.roadmap,.roi-grid{grid-template-columns:1fr}
+ .demo-body,.wiz-panel.active{grid-template-columns:1fr}
+ .demo-form{border-right:none;border-bottom:1px solid var(--border)}
+ footer{flex-direction:column;padding:36px 20px}
+ .wiz-steps{gap:0}
+ .wiz-step{min-width:80px;padding:12px 8px}
+ }
+
+ /* LEGAL SOURCES & LIVE CHECK */
+ .source-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:34px}
+ .source-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:22px;box-shadow:0 14px 34px rgba(15,23,42,.05)}
+ .source-card h3{font-family:var(--font-display);font-size:16px;margin-bottom:8px;color:var(--text)}
+ .source-card p{font-size:13.5px;color:var(--text-dim);line-height:1.65}
+ .source-code{display:inline-flex;align-items:center;justify-content:center;min-width:42px;height:28px;border-radius:8px;background:rgba(37,99,235,.08);border:1px solid rgba(37,99,235,.18);color:var(--accent);font-family:var(--font-mono);font-size:11px;font-weight:700;margin-bottom:14px}
+ .law-list{display:grid;grid-template-columns:1.05fr 1.5fr 1.2fr;gap:0;border:1px solid var(--border);border-radius:16px;overflow:hidden;background:var(--surface);box-shadow:0 18px 46px rgba(15,23,42,.06)}
+ .law-row{display:contents}
+ .law-cell{padding:15px 18px;border-bottom:1px solid var(--border);font-size:13.5px;color:var(--text-dim);line-height:1.55;background:var(--surface)}
+ .law-row:last-child .law-cell{border-bottom:none}
+ .law-head .law-cell{background:var(--surface2);font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--text-dimmer);text-transform:uppercase;letter-spacing:1px}
+ .law-name{font-weight:700;color:var(--text)}
+ .live-check{display:grid;grid-template-columns:.9fr 1.1fr;gap:22px;align-items:start}
+ .source-links{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:14px}
+ .source-link{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 13px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);text-decoration:none;color:var(--text);font-size:13px;transition:.2s}
+ .source-link:hover{border-color:var(--border2);transform:translateY(-1px)}
+ .source-link small{font-family:var(--font-mono);font-size:10px;color:var(--text-dimmer)}
+ .check-result{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:22px;box-shadow:0 18px 46px rgba(15,23,42,.06)}
+ .check-status{display:inline-flex;padding:6px 11px;border-radius:999px;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.22);color:#92400e;font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.7px;margin-bottom:14px}
+ .check-section{border-top:1px solid var(--border);padding-top:14px;margin-top:14px}
+ .check-section h4{font-family:var(--font-display);font-size:15px;margin-bottom:8px;color:var(--text)}
+ .check-list{list-style:none;display:flex;flex-direction:column;gap:8px}
+ .check-list li{position:relative;padding-left:18px;font-size:13.5px;color:var(--text-dim);line-height:1.55}
+ .check-list li::before{content:'';position:absolute;left:0;top:.7em;width:7px;height:7px;border-radius:50%;background:var(--accent)}
+ .risk-pill{display:inline-flex;padding:4px 9px;border-radius:999px;font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.5px}
+ .risk-yellow{background:rgba(245,158,11,.12);color:#92400e;border:1px solid rgba(245,158,11,.25)}
+ .risk-green{background:rgba(16,185,129,.12);color:#047857;border:1px solid rgba(16,185,129,.25)}
+ .risk-red{background:rgba(239,68,68,.10);color:#b91c1c;border:1px solid rgba(239,68,68,.22)}
+ .api-note{margin-top:16px;padding:14px 16px;border-radius:12px;background:rgba(37,99,235,.06);border:1px solid rgba(37,99,235,.16);font-size:12.5px;color:var(--text-dim);line-height:1.65}
+ @media(max-width:900px){.source-grid,.live-check{grid-template-columns:1fr}.law-list{display:block}.law-row{display:block}.law-cell{display:block}.law-head{display:none}.source-links{grid-template-columns:1fr}}
+
+ 
+
+/* --- AEGIS POLISH v6: юридический SaaS-стиль, компактные сетки, динамическая карта --- */
+:root{
+ --bg:#f4f7fb; --bg2:#eef3f8; --bg3:#e4ebf5;
+ --surface:#ffffff; --surface2:#f8fafc;
+ --border:rgba(15,23,42,.11); --border2:rgba(36,79,158,.28);
+ --text:#172033; --text-dim:#556477; --text-dimmer:#7d8998;
+ --accent:#244f9e; --accent2:#2f67c8; --accent-glow:rgba(36,79,158,.15);
+ --gold:#b7791f; --green:#0f8b6f; --red:#c2413b; --orange:#d97706;
+ --font-display:'Syne',system-ui,sans-serif; --font-body:'DM Sans',system-ui,sans-serif; --font-mono:'DM Mono',ui-monospace,monospace;
+}
+body{font-size:15px;letter-spacing:-.01em;background:linear-gradient(180deg,#f7f9fd 0%,#f1f5fa 100%);}
+body::before{background-image:radial-gradient(ellipse 50% 40% at 8% 15%,rgba(36,79,158,.055) 0%,transparent 60%),radial-gradient(ellipse 35% 35% at 92% 78%,rgba(183,121,31,.04) 0%,transparent 60%)}
+nav{padding:12px 42px;background:rgba(255,255,255,.9);box-shadow:0 10px 35px rgba(15,23,42,.04)}
+.nav-logo{font-family:var(--font-body);font-size:17px;letter-spacing:-.2px}.nav-shield{font-family:var(--font-display);font-weight:800}.nav-links a{font-size:12.5px}.nav-cta{border-radius:10px!important}
+section{padding:76px 42px} section>*{max-width:1280px;margin-left:auto;margin-right:auto}.hero{padding:132px 42px 76px;min-height:82vh}.hero h1{letter-spacing:-2.5px}.hero-sub{font-size:18px;max-width:660px}.hero-stats{gap:28px;margin-top:48px}.stat-n{font-size:32px}.stat-l{font-size:10.5px}
+.stag{font-size:10px;letter-spacing:1.6px}.slead{margin-bottom:34px;max-width:720px}.segments,.feat-grid,.mkt-grid,.team-grid,.roadmap,.source-grid{gap:16px}.seg,.feat,.mkt-card,.team-card,.road,.source-card,.legal-method-card{box-shadow:0 16px 38px rgba(15,23,42,.055)}
+.demo-panel,.wizard{background:#fff;border-radius:18px;box-shadow:0 22px 60px rgba(15,23,42,.075)}.demo-topbar{background:#f8fafc}.demo-body{grid-template-columns:minmax(340px,.92fr) minmax(0,1.08fr)}.demo-form,.demo-result{padding:24px}.form-input{height:44px}.form-group{margin-bottom:14px}.run-btn{height:46px;font-family:var(--font-body);letter-spacing:0}.info-box{box-shadow:0 12px 28px rgba(15,23,42,.045)}
+.flag-icon,.seg-icon,.prob-icon,.feat-icon{display:none!important}.flag-item,.vflag{gap:0;padding:14px 16px}.flag-text,.vflag div{font-size:13px}.flag-red,.vflag.vf-crit{border-color:rgba(194,65,59,.26);background:#fff7f6}.flag-yellow,.vflag.vf-warn{border-color:rgba(183,121,31,.28);background:#fffaf0}.flag-green,.vflag.vf-ok{border-color:rgba(15,139,111,.24);background:#f2fbf8}
+#shadow .demo-body{grid-template-columns:420px minmax(0,1fr)}#shadow .demo-form{background:#f8fafc}#shadow .demo-result{background:#fff}.vessel-flags{gap:10px}.vflag{border-radius:12px}.vflag b,.vflag strong{color:var(--text)}#vesselMap{height:360px;border-radius:16px;background:#eef3f8!important;border:1px solid rgba(15,23,42,.12)}.leaflet-container{font-family:var(--font-body)!important;border-radius:16px}.leaflet-popup-content{font-family:var(--font-body);font-size:12.5px;color:#172033}
+#sf_result>div:first-child{box-shadow:0 14px 32px rgba(15,23,42,.06);border-radius:16px!important;background:#fff!important}.sf-route-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}.sf-meta-card{padding:10px 12px;border:1px solid var(--border);background:#f8fafc;border-radius:12px}.sf-meta-card small{display:block;font-family:var(--font-mono);font-size:9px;color:var(--text-dimmer);text-transform:uppercase;letter-spacing:.8px}.sf-meta-card span{font-size:13px;font-weight:700;color:var(--text)}
+.law-list,.check-result{box-shadow:0 18px 46px rgba(15,23,42,.055)}.live-check{grid-template-columns:420px minmax(0,1fr)}.source-link{background:#fff}.api-note{background:#eef5ff}.disclaimer{background:#fff8f8}
+@media(max-width:1050px){#shadow .demo-body,.live-check{grid-template-columns:1fr}.nav-links{display:none}section,.hero{padding-left:22px;padding-right:22px}}
+
+
+
+/* --- AEGIS v7: читаемость + профессиональные проверки --- */
+:root{
+  --text:#172033; --text-dim:#4f5f73; --text-dimmer:#6f7c8d;
+  --accent:#2456a6; --accent2:#2d67c8;
+  --surface:#ffffff; --surface2:#f7f9fc; --bg:#f4f7fb; --bg2:#edf3f9;
+}
+body{font-size:16px;line-height:1.72;color:var(--text)}
+nav{padding:13px 38px}.nav-links a{font-size:13.5px}.nav-logo{font-size:18px}
+section{padding:72px 42px}.slead{font-size:17px;max-width:760px}.stag{font-size:11px}h2{font-size:clamp(30px,3.8vw,44px)}
+.form-label{font-size:12px;letter-spacing:.9px;color:#5b6980}.form-input{height:48px;font-size:16px;padding:12px 15px;border-radius:10px}.form-group{margin-bottom:18px}
+.src-chip{padding:10px 12px}.src-chip span{font-size:12px}.run-btn{height:50px;font-size:15.5px;border-radius:11px}.btn-s,.btn-p{font-size:15px}
+.wizard{border-radius:20px;overflow:hidden}.wiz-step{padding:18px 16px}.wiz-step-num{font-size:10.5px}.wiz-step-label{font-size:14px}.wiz-body{padding:32px}.wiz-panel.active{grid-template-columns:minmax(420px,.98fr) minmax(420px,1.02fr);gap:28px}.wiz-nav{padding:20px 32px}.wiz-progress{font-size:12px}.wiz-btn-next,.wiz-btn-back{font-size:15px;padding:11px 24px;border-radius:10px}
+.info-box{padding:24px;border-radius:16px;background:#fff;box-shadow:0 18px 40px rgba(15,23,42,.065)}.info-box h4{font-size:19px;margin-bottom:12px}.info-box p{font-size:15px;line-height:1.7;color:var(--text-dim)}
+.flag-item{padding:14px 16px;border-radius:12px;margin-bottom:10px}.flag-text{font-size:14.5px;line-height:1.65}.flag-text strong{font-size:14.5px}
+.demo-form h3,.demo-result h3{font-size:12px}.demo-form,.demo-result{padding:28px}.demo-panel{border-radius:20px}.demo-body{grid-template-columns:minmax(390px,.95fr) minmax(0,1.05fr)}
+.legal-report-title{font-size:28px}.legal-report-card{padding:20px}.legal-report-card h5{font-size:17px}.legal-report-card p,.legal-report-card li{font-size:15px}.legal-report-meta{font-size:12.5px}.legal-status{font-size:11.5px}.legal-risk-score{font-size:48px}.legal-conclusion{font-size:15px}.legal-note{font-size:13.5px}.dossier-out{font-size:15.5px;max-height:620px;border-radius:18px}
+.prof-status{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:14px 0 18px;padding:15px 16px;border:1px solid var(--border);border-radius:14px;background:#f8fafc}.prof-status b{font-family:var(--font-display);font-size:17px}.prof-score{font-family:var(--font-display);font-size:28px;font-weight:800}.prof-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}.prof-card{background:#f8fafc;border:1px solid var(--border);border-radius:13px;padding:14px}.prof-card h5{font-family:var(--font-display);font-size:14.5px;margin-bottom:8px}.prof-card ul{padding-left:18px}.prof-card li{font-size:14px;color:var(--text-dim);margin:5px 0}.prof-line{height:8px;border-radius:999px;background:#e5eaf1;overflow:hidden;margin-top:8px}.prof-fill{height:100%;border-radius:999px}.tag-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.risk-tag{display:inline-flex;padding:5px 10px;border-radius:999px;font:700 11.5px var(--font-mono);letter-spacing:.4px;border:1px solid var(--border);background:#fff;color:var(--text-dim)}
+.risk-ok{color:#047857;background:#ecfdf5;border-color:#a7f3d0}.risk-warn{color:#92400e;background:#fffbeb;border-color:#fde68a}.risk-bad{color:#b91c1c;background:#fef2f2;border-color:#fecaca}.risk-blue{color:#1d4ed8;background:#eff6ff;border-color:#bfdbfe}
+.check-list li{font-size:15px}.check-section h4{font-size:17px}.source-card p,.law-cell{font-size:14.5px}.source-link{font-size:14.5px}.api-note{font-size:14px}.check-result{font-size:15px}
+@media(max-width:1000px){.wiz-panel.active,.demo-body{grid-template-columns:1fr}.wiz-body{padding:22px}.prof-grid{grid-template-columns:1fr}section{padding-left:22px;padding-right:22px}}
+
+
+/* --- AEGIS v8: единая дизайн-система, иконки, темнее светлая палитра --- */
+:root{
+  --bg:#e9eef5; --bg2:#e1e8f1; --bg3:#d8e2ee;
+  --surface:#ffffff; --surface2:#f2f5f9;
+  --border:rgba(20,35,55,.14); --border2:rgba(27,85,150,.34);
+  --text:#172033; --text-dim:#46586d; --text-dimmer:#718095;
+  --accent:#24579e; --accent2:#2d69b8; --accent-glow:rgba(36,87,158,.16);
+  --gold:#a76512; --green:#087b68; --red:#b73b37; --orange:#c96a15;
+  --font-display:'Inter',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --font-body:'Inter',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --font-mono:'JetBrains Mono','SFMono-Regular',ui-monospace,monospace;
+}
+*{font-family:var(--font-body)}
+body{background:linear-gradient(180deg,#eef3f8 0%,#e5ecf5 48%,#dfe7f1 100%);font-size:16px;color:var(--text);}
+body::before{background-image:radial-gradient(ellipse 50% 36% at 8% 12%,rgba(36,87,158,.08),transparent 64%),radial-gradient(ellipse 42% 32% at 90% 78%,rgba(8,123,104,.055),transparent 65%)}
+h1,h2,h3,h4,h5,.nav-logo,.stat-n,.legal-report-title,.prof-score,.rsb,.mkt-num{font-family:var(--font-display)!important;letter-spacing:-.035em}
+nav{background:rgba(245,248,252,.93);border-bottom:1px solid rgba(20,35,55,.12);box-shadow:0 10px 34px rgba(20,35,55,.07)}
+.nav-logo{font-weight:850}.nav-shield{background:#172033;color:#fff;border-radius:10px;box-shadow:none}.nav-links a{font-weight:650;color:#52647a}.nav-cta{background:#172033!important;box-shadow:0 10px 22px rgba(23,32,51,.12)}
+.hero{min-height:78vh}.hero h1{font-weight:900}.grad{background:linear-gradient(135deg,#172033 0%,#24579e 52%,#087b68 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}.hero-tag{font-family:var(--font-mono);background:rgba(36,87,158,.08);border-color:rgba(36,87,158,.2)}
+section{padding-top:70px;padding-bottom:70px}.slead{font-size:17px;color:var(--text-dim)}
+.demo-panel,.wizard,.check-result,.seg,.feat,.mkt-card,.source-card,.legal-method-card,.team-card,.road{background:#fff;border:1px solid var(--border);box-shadow:0 18px 42px rgba(20,35,55,.08)}
+.demo-topbar{background:#f4f7fb}.demo-title,.demo-badge,.stag,.form-label,.wiz-step-num,.stat-l{font-family:var(--font-mono)!important}.demo-badge{background:#edf4ff;color:#24579e;border-color:#c9dbf4}
+.form-input{background:#fff;border:1px solid rgba(20,35,55,.18);color:var(--text);box-shadow:inset 0 1px 0 rgba(20,35,55,.03)}
+.form-input:focus{border-color:#24579e;box-shadow:0 0 0 4px rgba(36,87,158,.12)}
+.run-btn,.wiz-btn-next,.btn-p{background:#24579e!important;color:#fff!important;box-shadow:0 12px 24px rgba(36,87,158,.16);font-family:var(--font-body)!important}
+.btn-s,.wiz-btn-back{background:#fff;border-color:rgba(20,35,55,.14);color:var(--text)}
+.wiz-step{background:#e8eff6}.wiz-step.active{background:#d7e5f7;border-bottom-color:#24579e}.wiz-step.done{background:#dcefeb}.wiz-step-label{font-weight:700}.wiz-step.done .wiz-step-label{color:#087b68}.wiz-step.active .wiz-step-label{color:#24579e}
+.info-box h4{font-size:20px}.flag-item,.vflag,.prof-card,.legal-report-card,.source-link{border-radius:14px}.flag-red,.vflag.vf-crit{background:#fff4f2;border-color:#efb7b2}.flag-yellow,.vflag.vf-warn{background:#fff8ea;border-color:#edc88b}.flag-green,.vflag.vf-ok{background:#eefaf6;border-color:#b4e4d7}
+.route-dot{position:relative;width:44px;height:44px;border-radius:12px;font-size:0!important;background:#f7fafc!important;box-shadow:0 8px 20px rgba(20,35,55,.06);}
+.route-dot::before{content:attr(data-code);font:800 12px var(--font-mono);letter-spacing:.2px;color:#172033;}
+.route-dot::after{content:'';position:absolute;right:-4px;top:-4px;width:13px;height:13px;border-radius:50%;background:#fff;border:2px solid currentColor;}
+.route-dot.risk-low{color:var(--green);border-color:var(--green);}.route-dot.risk-med{color:var(--gold);border-color:var(--gold)}.route-dot.risk-high{color:var(--orange);border-color:var(--orange)}.route-dot.risk-crit{color:var(--red);border-color:var(--red)}
+.route-line{height:3px;border-radius:999px}.route-line.solid{background:var(--green)}.route-line.dotted{background:repeating-linear-gradient(90deg,var(--gold) 0,var(--gold) 8px,transparent 8px,transparent 14px)}.route-line.dashed{background:repeating-linear-gradient(90deg,var(--red) 0,var(--red) 10px,transparent 10px,transparent 16px)}
+.route-legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--text-dim)}.route-legend span{display:flex;align-items:center;gap:6px}.route-legend i{width:20px;height:3px;border-radius:999px;display:inline-block}.lg-low{background:var(--green)}.lg-med{background:repeating-linear-gradient(90deg,var(--gold) 0,var(--gold) 6px,transparent 6px,transparent 10px)}.lg-high{background:repeating-linear-gradient(90deg,var(--red) 0,var(--red) 6px,transparent 6px,transparent 10px)}
+#shadow .demo-form{background:#f2f5f9}#shadow .demo-result{background:#fff}#vesselMap{background:#eef3f8!important}.leaflet-container{filter:saturate(.92)}
+.check-status{font-family:var(--font-mono);font-size:11.5px;background:#edf7f3;color:#087b68;border-color:#b4e4d7}.api-note{background:#edf4ff;border-color:#c9dbf4;color:#46586d}
+.disclaimer strong{color:#9f302c!important}.disclaimer{background:#fff4f2;border-color:#efb7b2;color:#46586d}
+
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+ <a href="#" class="nav-logo"><div class="nav-shield">A</div>Aegis Comply</a>
+ <div class="nav-links">
+ <a href="#clients">Клиенты</a>
+ <a href="#problem">Проблема</a>
+ <a href="#cabinet">Кабинет</a>
+ <a href="#payment">Платёж</a>
+ <a href="#route">Маршрут</a>
+ <a href="#shadow">Флот</a>
+ <a href="#legal">Методология</a><a href="#laws">НПА</a><a href="#realtime">Проверка</a><a href="#datasources">Источники</a><a href="#market">Рынок</a>
+ <a href="#team">Команда</a>
+ <a href="#cabinet" class="nav-cta">Запустить анализ</a>
+ </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+ <div class="hero-grid"></div>
+ <div class="hero-tag">RegTech · ВКР-стартап · LegalTech / RegTech · ФинУниверситет 2026</div>
+ <h1><span class="grad">Двойной<br>комплаенс</span><br>для ВЭД</h1>
+ <p class="hero-sub">Первая российская RegTech-платформа, одновременно покрывающая ФЗ-183 (экспортный контроль РФ) и международные санкционные режимы OFAC/ЕС — для малого и среднего бизнеса.</p>
+ <div class="hero-btns">
+ <a href="#cabinet" class="btn-p">Открыть аналитический кабинет</a>
+ <a href="#problem" class="btn-s">Почему это важно</a>
+ </div>
+ <div class="hero-stats">
+ <div><div class="stat-n">2<span>М+</span></div><div class="stat-l">субъектов ВЭД в РФ</div></div>
+ <div><div class="stat-n">40<span>%</span></div><div class="stat-l">нарушений — идентификация товара</div></div>
+ <div><div class="stat-n">$<span>16B</span></div><div class="stat-l">глобальный рынок RegTech</div></div>
+ <div><div class="stat-n">TRL<span> 3</span></div><div class="stat-l">уровень готовности</div></div>
+ </div>
+</section>
+
+<!-- CLIENT SEGMENTS -->
+<section id="clients" style="background:var(--bg2)">
+ <span class="stag">01 / Клиентские сегменты</span>
+ <h2>Кому нужен Aegis</h2>
+ <p class="slead">Три целевых сегмента с разными задачами, объединённых одной проблемой — невозможностью самостоятельно управлять регуляторным риском в ВЭД.</p>
+ <div class="segments">
+ <div class="seg">
+ <div class="seg-icon"></div>
+ <h3>Экспортёры и импортёры</h3>
+ <p>МСП, ведущие ВЭД: поставщики промышленного оборудования, технологий, сырья. Нуждаются в проверке контрагента, классификации товара и документации для таможни.</p>
+ <div class="seg-tags"><span class="seg-tag">ФЗ-183</span><span class="seg-tag">ТН ВЭД</span><span class="seg-tag">Dual-use</span><span class="seg-tag">Досье</span></div>
+ </div>
+ <div class="seg">
+ <div class="seg-icon"></div>
+ <h3>Банки и финтех</h3>
+ <p>Финансовые учреждения с риском вторичных санкций, обслуживающие корпоративных клиентов с ВЭД. Нужна логика обоснования manual review и отказов в обслуживании.</p>
+ <div class="seg-tags"><span class="seg-tag">KYC/AML</span><span class="seg-tag">Коридор</span><span class="seg-tag">SWIFT</span><span class="seg-tag">Правило 50%</span></div>
+ </div>
+ <div class="seg">
+ <div class="seg-icon"></div>
+ <h3>Логистика и трейдинг</h3>
+ <p>Экспедиторы, фрахтователи, трейдинговые компании. Работают с морскими маршрутами, транзитными юрисдикциями и судами под открытым флагом — высокий риск антиобхода.</p>
+ <div class="seg-tags"><span class="seg-tag">Маршрут</span><span class="seg-tag">AIS</span><span class="seg-tag">Shadow Fleet</span><span class="seg-tag">Транзит</span></div>
+ </div>
+ </div>
+</section>
+
+<!-- PROBLEM -->
+<section id="problem">
+ <span class="stag">02 / Проблема</span>
+ <h2>МСП застряли между<br>двумя режимами</h2>
+ <p class="slead">Одновременное соблюдение российского экспортного контроля и международных санкций требует ресурсов, которых у малого бизнеса нет.</p>
+ <div class="prob-grid">
+ <div class="prob-card"><span class="prob-num">01</span><span class="prob-icon"></span><h3 style="font-family:var(--font-display);font-size:16px;font-weight:700;margin-bottom:9px">Финансовая изоляция</h3><p style="font-size:13.5px;color:var(--text-dim);line-height:1.6">Вторичные санкции блокируют корреспондентские счета (USD/EUR) даже при формальном соблюдении российского права. Правило 50% OFAC не требует прямого включения в SDN-лист.</p></div>
+ <div class="prob-card"><span class="prob-num">02</span><span class="prob-icon">️</span><h3 style="font-family:var(--font-display);font-size:16px;font-weight:700;margin-bottom:9px">Уголовный риск</h3><p style="font-size:13.5px;color:var(--text-dim);line-height:1.6">40% нарушений по ФЗ-183 — непроведение идентификации товаров двойного назначения. Ошибочная классификация по ТН ВЭД грозит ответственностью по ст. 189 УК РФ.</p></div>
+ <div class="prob-card"><span class="prob-num">03</span><span class="prob-icon"></span><h3 style="font-family:var(--font-display);font-size:16px;font-weight:700;margin-bottom:9px">Нет единого решения</h3><p style="font-size:13.5px;color:var(--text-dim);line-height:1.6">World-Check и ComplyAdvantage не покрывают ФЗ-183. Российские юрфирмы слабы в OFAC/ЕС. Экспертиза уровня Big4 недоступна МСП по цене.</p></div>
+ </div>
+</section>
+
+<!-- ANALYTICAL CABINET - WIZARD -->
+<section id="cabinet" style="background:var(--bg2)">
+ <span class="stag">03 / Аналитический кабинет</span>
+ <h2>Пошаговый анализ<br>сделки ВЭД</h2>
+ <p class="slead">End-to-end проверка: от контрагента и товара до платёжного маршрута и комплаенс-досье. Именно так работает промышленная версия Aegis.</p>
+
+ <div class="wizard">
+ <div class="wiz-header">
+ <div class="wiz-steps">
+ <div class="wiz-step active" onclick="goStep(0)" id="ws0"><div class="wiz-step-num">ШАГ 01</div><div class="wiz-step-label">Контрагент</div></div>
+ <div class="wiz-step" onclick="goStep(1)" id="ws1"><div class="wiz-step-num">ШАГ 02</div><div class="wiz-step-label">Товар</div></div>
+ <div class="wiz-step" onclick="goStep(2)" id="ws2"><div class="wiz-step-num">ШАГ 03</div><div class="wiz-step-label">Структура</div></div>
+ <div class="wiz-step" onclick="goStep(3)" id="ws3"><div class="wiz-step-num">ШАГ 04</div><div class="wiz-step-label">Платёж</div></div>
+ <div class="wiz-step" onclick="goStep(4)" id="ws4"><div class="wiz-step-num">ШАГ 05</div><div class="wiz-step-label">Маршрут</div></div>
+ <div class="wiz-step" onclick="goStep(5)" id="ws5"><div class="wiz-step-num">ШАГ 06</div><div class="wiz-step-label">Досье</div></div>
+ </div>
+ </div>
+
+ <!-- STEP 0: COUNTERPARTY -->
+ <div class="wiz-body">
+ <div class="wiz-panel active" id="wp0">
+ <div>
+ <div class="form-group"><label class="form-label">Наименование контрагента</label><input class="form-input" id="w_cp" placeholder="Global Trade Solutions LLC" value="Global Trade Solutions LLC"/></div>
+ <div class="form-group"><label class="form-label">Страна регистрации</label>
+ <select class="form-input" id="w_country">
+ <option value="tr"> Турция</option><option value="ae"> ОАЭ</option><option value="cn"> Китай</option>
+ <option value="kz" selected> Казахстан</option><option value="eu"> ЕС</option><option value="us"> США</option>
+ <option value="ir"> Иран</option><option value="by"> Беларусь</option><option value="in"> Индия</option>
+ </select>
+ </div>
+ <div class="form-group"><label class="form-label">Тип контрагента</label>
+ <select class="form-input" id="w_cptype">
+ <option value="ltd">Общество с ограниченной ответственностью</option>
+ <option value="jsc">Акционерное общество / корпорация</option>
+ <option value="gov">Государственная структура / ГУП</option>
+ <option value="ind">Индивидуальный предприниматель</option>
+ </select>
+ </div>
+ <div class="form-group"><label class="form-label">Источники санкционной проверки</label>
+ <div class="src-row">
+ <label class="src-chip"><input type="checkbox" checked><span>OFAC</span></label>
+ <label class="src-chip"><input type="checkbox" checked><span>EU</span></label>
+ <label class="src-chip"><input type="checkbox" checked><span>UN</span></label>
+ <label class="src-chip"><input type="checkbox" checked><span>UK</span></label>
+ </div>
+ </div>
+ </div>
+ <div class="info-box">
+ <h4> Что проверяем</h4>
+ <p style="margin-bottom:14px">На этом шаге Aegis проводит санкционный скрининг контрагента по базам OFAC SDN/SSI, EU Consolidated, UN, UK OFSI, BIS Entity List.</p>
+ <div class="flag-item flag-yellow"><div class="flag-icon">️</div><div class="flag-text"><strong>Казахстан</strong> — транзитный хаб с риском реэкспорта. Рекомендуется углублённая проверка KYC и конечного пользователя.</div></div>
+ <div class="flag-item flag-green"><div class="flag-icon"></div><div class="flag-text">Прямого попадания в санкционные списки не обнаружено. Требуется проверка UBO (шаг 3).</div></div>
+ </div>
+ </div>
+
+ <!-- STEP 1: GOODS -->
+ <div class="wiz-panel" id="wp1">
+ <div>
+ <div class="form-group"><label class="form-label">Описание товара / технологии</label><input class="form-input" id="w_goods" placeholder="Электронные компоненты" value="Промышленные микроконтроллеры"/></div>
+ <div class="form-group"><label class="form-label">Код ТН ВЭД</label>
+ <select class="form-input" id="w_tnved">
+ <option value="8542">8542 — Микросхемы и полупроводники ️ DUAL-USE</option>
+ <option value="8471">8471 — Вычислительная техника ️ DUAL-USE</option>
+ <option value="8803">8803 — Части летательных аппаратов КОНТРОЛЬ</option>
+ <option value="9014">9014 — Навигационные приборы КОНТРОЛЬ</option>
+ <option value="2710">2710 — Нефтепродукты</option>
+ <option value="7208">7208 — Прокат из нелегированной стали</option>
+ <option value="0201">0201 — Говядина нет ограничений</option>
+ </select>
+ </div>
+ <div class="form-group"><label class="form-label">Конечный пользователь</label>
+ <select class="form-input" id="w_enduser">
+ <option value="civil">Гражданское применение</option>
+ <option value="gov">Государственный орган</option>
+ <option value="mil">Военное / оборонное</option>
+ <option value="unknown">Неизвестно</option>
+ </select>
+ </div>
+ <div class="form-group"><label class="form-label">Стоимость сделки (USD)</label><input class="form-input" id="w_amount" type="number" value="85000" placeholder="85000"/></div>
+ </div>
+ <div class="info-box">
+ <h4> Dual-Use идентификация</h4>
+ <p style="margin-bottom:14px">Микросхемы (8542) входят в перечень товаров двойного назначения по ПП РФ № 312 и EU Dual-Use Regulation 2021/821. Требуется лицензия ФСТЭК.</p>
+ <div class="flag-item flag-red"><div class="flag-icon"></div><div class="flag-text"><strong>DUAL-USE:</strong> Код 8542 включён в список Common High Priority Items (BIS/OFAC 2023). Высокий риск отказа при прохождении через западную финансовую инфраструктуру.</div></div>
+ <div class="flag-item flag-yellow"><div class="flag-icon">️</div><div class="flag-text">При военном конечном использовании требуется End-User Statement (EUS) по форме ФСТЭК и BIS-748P.</div></div>
+ </div>
+ </div>
+
+ <!-- STEP 2: OWNERSHIP -->
+ <div class="wiz-panel" id="wp2">
+ <div>
+ <h4 style="font-family:var(--font-display);font-size:16px;margin-bottom:16px">Структура владения (UBO)</h4>
+ <div class="form-group"><label class="form-label">Бенефициарный владелец 1 (% доли)</label><input class="form-input" id="w_ubo1" value="Аль-Мансур Халид (ОАЭ) — 60%"/></div>
+ <div class="form-group"><label class="form-label">Бенефициарный владелец 2 (% доли)</label><input class="form-input" id="w_ubo2" value="Иванов С.В. (Россия) — 40%"/></div>
+ <div class="form-group"><label class="form-label">Материнская компания (если есть)</label><input class="form-input" id="w_parent" placeholder="Не применимо" value="GTS Holdings Ltd (BVI)"/></div>
+ <div class="form-group"><label class="form-label">Наличие аффилированных структур под санкциями</label>
+ <select class="form-input" id="w_sanctaff">
+ <option value="no">Нет / неизвестно</option>
+ <option value="suspected">Подозревается — требует проверки</option>
+ <option value="yes">Да — известна аффилированность</option>
+ </select>
+ </div>
+ </div>
+ <div class="info-box">
+ <h4> Правило 50% OFAC</h4>
+ <p style="margin-bottom:12px">OFAC применяет санкции к любому лицу, прямо или косвенно принадлежащему подсанкционному лицу на 50% и более. Контроль ниже 50% также требует анализа.</p>
+ <div class="flag-item flag-red"><div class="flag-icon"></div><div class="flag-text"><strong>GTS Holdings Ltd (BVI)</strong> — юрисдикция BVI характерна для непрозрачных структур. Требуется раскрытие UBO до продолжения сделки.</div></div>
+ <div class="flag-item flag-yellow"><div class="flag-icon">️</div><div class="flag-text">Российский совладелец (40%) не является основанием для автоматического отказа, но требует мониторинга на предмет вторичных санкций.</div></div>
+ </div>
+ </div>
+
+ <!-- STEP 3: PAYMENT -->
+ <div class="wiz-panel" id="wp3">
+ <div>
+ <div class="form-group"><label class="form-label">Банк-отправитель</label><input class="form-input" id="w_bankfrom" value="Газпромбанк (Россия)"/></div>
+ <div class="form-group"><label class="form-label">Банк-получатель</label><input class="form-input" id="w_bankto" value="Ziraat Bank (Турция)"/></div>
+ <div class="form-group"><label class="form-label">Валюта расчётов</label>
+ <select class="form-input" id="w_currency">
+ <option value="usd">USD — высокий риск блокировки</option>
+ <option value="eur">EUR — средний риск</option>
+ <option value="cny">CNY — умеренный риск</option>
+ <option value="rub" selected>RUB — низкий риск</option>
+ <option value="aed">AED — дирхам ОАЭ</option>
+ </select>
+ </div>
+ <div class="form-group"><label class="form-label">Назначение платежа</label><input class="form-input" id="w_purpose" value="Оплата по контракту № 2025-KZ-001 за поставку электронных компонентов"/></div>
+ </div>
+ <div class="info-box">
+ <h4> Платёжный коридор</h4>
+ <p style="margin-bottom:12px">Газпромбанк находится под секторальными санкциями SDN с ноября 2024. Расчёты в USD через корреспондентские счета заблокированы. Рублёвые расчёты допустимы.</p>
+ <div class="flag-item flag-red"><div class="flag-icon"></div><div class="flag-text"><strong>Газпромбанк → USD</strong>: недоступно. Банк включён в SDN-список OFAC (ноябрь 2024).</div></div>
+ <div class="flag-item flag-green"><div class="flag-icon"></div><div class="flag-text"><strong>RUB/CNY расчёты</strong>: технически доступны. Ziraat Bank работает с Россией в нац. валютах.</div></div>
+ </div>
+ </div>
+
+ <!-- STEP 4: ROUTE -->
+ <div class="wiz-panel" id="wp4">
+ <div>
+ <div class="form-group"><label class="form-label">Страна отправления</label>
+ <select class="form-input" id="w_from"><option value="ru"> Россия</option></select>
+ </div>
+ <div class="form-group"><label class="form-label">Транзитная юрисдикция (если есть)</label>
+ <select class="form-input" id="w_transit">
+ <option value="none">Прямая поставка (без транзита)</option>
+ <option value="tr" selected> Турция</option>
+ <option value="ae"> ОАЭ</option>
+ <option value="am"> Армения</option>
+ <option value="ge"> Грузия</option>
+ <option value="cn"> Китай</option>
+ </select>
+ </div>
+ <div class="form-group"><label class="form-label">Страна назначения</label>
+ <select class="form-input" id="w_dest">
+ <option value="kz" selected> Казахстан</option>
+ <option value="in"> Индия</option>
+ <option value="cn"> Китай</option>
+ <option value="ae"> ОАЭ</option>
+ <option value="ir"> Иран</option>
+ </select>
+ </div>
+ <div class="form-group"><label class="form-label">Вид транспорта</label>
+ <select class="form-input" id="w_transport">
+ <option value="road">Автомобильный</option>
+ <option value="rail">Железнодорожный</option>
+ <option value="sea">Морской</option>
+ <option value="air">Авиационный</option>
+ </select>
+ </div>
+ </div>
+ <div class="info-box">
+ <h4>️ Антиобход санкций</h4>
+ <p style="margin-bottom:12px">Маршрут РФ → Турция → Казахстан является одним из ключевых «транзитных коридоров» для товаров двойного назначения. OFAC и ЕС выпустили специальные advisory по турецким и казахстанским субъектам.</p>
+ <div class="flag-item flag-red"><div class="flag-icon"></div><div class="flag-text"><strong>Транзит через Турцию</strong> с dual-use товаром: активный мониторинг OFAC (Advisory 2023-10). Требуется документация конечного пользователя.</div></div>
+ <div class="flag-item flag-yellow"><div class="flag-icon">️</div><div class="flag-text">Казахстан как конечная точка: необходима проверка, что товар не предназначен для последующей реэкспортной цепочки в РФ или третьи страны.</div></div>
+ </div>
+ </div>
+
+ <!-- STEP 5: DOSSIER -->
+ <div class="wiz-panel full" id="wp5">
+ <div>
+ <div id="wizDossierOut" class="dossier-out">Нажмите «Сформировать досье» для получения результата проверки.</div>
+ <button class="run-btn" style="margin-top:14px" onclick="genWizDossier()">Сформировать комплаенс-досье</button>
+ <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
+ <button class="btn-s" style="font-size:13px;padding:9px 18px" onclick="copyDossier()"> Скопировать</button>
+ <button class="btn-s" style="font-size:13px;padding:9px 18px" onclick="restartWiz()">↺ Новая проверка</button>
+ </div>
+ <div style="margin-top:16px;padding:14px 16px;border-radius:10px;background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.15);font-size:12px;color:var(--text-dim)">
+ ️ <strong style="color:#fca5a5">Дисклеймер:</strong> Результаты формируют первичное комплаенс-досье и evidence trail. Финальное решение принимает ответственный юрист/комплаенс-офицер.
+ </div>
+ </div>
+ </div>
+ </div><!-- wiz-body -->
+
+ <div class="wiz-nav">
+ <span class="wiz-progress" id="wiz_prog">Шаг 1 из 6</span>
+ <div class="wiz-btns">
+ <button class="wiz-btn-back" onclick="wizBack()" id="wiz_back" style="display:none">Назад</button>
+ <button class="wiz-btn-next" onclick="wizNext()" id="wiz_next">Далее</button>
+ </div>
+ </div>
+ </div>
+</section>
+
+<!-- PAYMENT CORRIDOR CHECKER -->
+<section id="payment">
+ <span class="stag">04 / Платёжный коридор</span>
+ <h2>Пройдёт ли платёж?</h2>
+ <p class="slead">Оценка вероятности прохождения платежа через банковскую инфраструктуру с учётом санкционного профиля банков, валюты и юрисдикций.</p>
+ <div class="demo-panel">
+ <div class="demo-topbar">
+ <div class="demo-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
+ <div class="demo-title">payment-corridor-checker · v0.4</div>
+ <div class="demo-badge">МОДУЛЬ</div>
+ </div>
+ <div class="demo-body">
+ <div class="demo-form">
+ <h3>Параметры платежа</h3>
+ <div class="form-group"><label class="form-label">Банк-отправитель (страна)</label>
+ <select class="form-input" id="pc_bankfrom">
+ <option value="ru_sber">Сбербанк (Россия)</option>
+ <option value="ru_gazp">Газпромбанк (Россия) — SDN</option>
+ <option value="ru_vtb">ВТБ (Россия) — SDN</option>
+ <option value="ru_tinkoff">Т-Банк / Тинькофф (Россия)</option>
+ <option value="kz_halyk">Halyk Bank (Казахстан)</option>
+ <option value="tr_is">İş Bankası (Турция)</option>
+ <option value="ae_fab">FAB (ОАЭ)</option>
+ </select>
+ </div>
+ <div class="form-group"><label class="form-label">Банк-получатель (страна)</label>
+ <select class="form-input" id="pc_bankto">
+ <option value="tr_ziraat">Ziraat Bank (Турция)</option>
+ <option value="ae_emirates">Emirates NBD (ОАЭ)</option>
+ <option value="cn_icbc">ICBC (Китай)</option>
+ <option value="de_db">Deutsche Bank (Германия)</option>
+ <option value="us_jpmc">JPMorgan (США)</option>
+ <option value="in_sbi">SBI (Индия)</option>
+ </select>
+ </div>
+ <div class="form-group"><label class="form-label">Валюта и сумма</label>
+ <select class="form-input" id="pc_currency">
+ <option value="usd">USD — доллар США</option>
+ <option value="eur">EUR — евро</option>
+ <option value="cny">CNY — китайский юань</option>
+ <option value="rub">RUB — российский рубль</option>
+ <option value="aed">AED — дирхам ОАЭ</option>
+ </select>
+ </div>
+ <div class="form-group"><label class="form-label">Характер операции</label>
+ <select class="form-input" id="pc_nature">
+ <option value="trade">Торговое финансирование (экспорт/импорт)</option>
+ <option value="service">Оплата услуг</option>
+ <option value="invest">Инвестиция / перевод капитала</option>
+ <option value="loan">Кредит / займ</option>
+ </select>
+ </div>
+ <button class="run-btn" onclick="checkPaymentCorridor()">Проверить коридор</button>
+ </div>
+ <div class="demo-result">
+ <h3>Результат анализа</h3>
+ <div id="pc_result">
+ <div style="padding:20px;text-align:center;color:var(--text-dim);font-size:13px">Заполните параметры и нажмите «Проверить коридор»</div>
+ </div>
+ </div>
+ </div>
+ </div>
+</section>
+
+<!-- ROUTE RISK BUILDER -->
+<section id="route" style="background:var(--bg2)">
+ <span class="stag">05 / Конструктор маршрута</span>
+ <h2>Антиобход<br>санкций</h2>
+ <p class="slead">Визуальный конструктор торгового маршрута с автоматическим выявлением red flags по транзитным коридорам, dual-use товарам и Common High Priority Items.</p>
+ <div class="demo-panel">
+ <div class="demo-topbar">
+ <div class="demo-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
+ <div class="demo-title">route-risk-builder · anti-circumvention · v0.3</div>
+ <div class="demo-badge">МОДУЛЬ</div>
+ </div>
+ <div class="demo-body">
+ <div class="demo-form">
+ <h3>Параметры маршрута</h3>
+ <div class="form-group"><label class="form-label">Страна отправления</label>
+ <select class="form-input" id="rr_from"><option value="ru"> Россия</option><option value="cn"> Китай</option></select>
+ </div>
+ <div class="form-group"><label class="form-label">Транзит 1</label>
+ <select class="form-input" id="rr_t1">
+ <option value="none">— нет транзита —</option>
+ <option value="tr" selected> Турция</option>
+ <option value="ae"> ОАЭ</option>
+ <option value="am"> Армения</option>
+ <option value="ge"> Грузия</option>
+ <option value="kz"> Казахстан</option>
+ <option value="cn"> Китай</option>
+ </select>
+ </div>
+ <div class="form-group"><label class="form-label">Транзит 2</label>
+ <select class="form-input" id="rr_t2">
+ <option value="none" selected>— нет транзита —</option>
+ <option value="ae"> ОАЭ</option>
+ <option value="in"> Индия</option>
+ <option value="hk"> Гонконг</option>
+ </select>
+ </div>
+ <div class="form-group"><label class="form-label">Страна назначения</label>
+ <select class="form-input" id="rr_dest">
+ <option value="kz" selected> Казахстан</option>
+ <option value="in"> Индия</option>
+ <option value="cn"> Китай</option>
+ <option value="ae"> ОАЭ</option>
+ <option value="ir"> Иран</option>
+ </select>
+ </div>
+ <div class="form-group"><label class="form-label">Категория товара</label>
+ <select class="form-input" id="rr_goods">
+ <option value="dual">Электроника / полупроводники (dual-use)</option>
+ <option value="aero">Авиационные компоненты (CHPI)</option>
+ <option value="oil">Нефтепродукты / энергоносители</option>
+ <option value="metal">Металлы и сплавы</option>
+ <option value="general">Товары общего назначения</option>
+ </select>
+ </div>
+ <button class="run-btn" onclick="buildRoute()">️ Построить маршрут</button>
+ </div>
+ <div class="demo-result">
+ <h3>Визуализация маршрута</h3>
+ <div id="rr_result">
+ <div style="padding:20px;text-align:center;color:var(--text-dim);font-size:13px">Выберите маршрут и нажмите «Построить»</div>
+ </div>
+ </div>
+ </div>
+ </div>
+</section>
+
+<!-- SHADOW FLEET -->
+<section id="shadow">
+ <span class="stag">06 / Теневой флот</span>
+ <h2>Проверка судна<br>на риски Shadow Fleet</h2>
+ <p class="slead">Оценка по индикаторам IMO/OFAC: отключение AIS, смена флага, непрозрачная собственность, страховые аномалии, история STS-операций. Модуль формирует профиль судна по IMO/MMSI, флагу, AIS-сигналам, истории переходов, STS-операциям, страховому покрытию и структуре владения. Маршрут и риск-профиль пересчитываются при изменении входных данных.</p>
+ <div class="demo-panel">
+ <div class="demo-topbar">
+ <div class="demo-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
+ <div class="demo-title">shadow-fleet-risk-module · imo-screening · v0.2</div>
+ <div class="demo-badge">МОДУЛЬ</div>
+ </div>
+ <div class="demo-body">
+ <div class="demo-form">
+ <h3>Параметры судна</h3>
+ <div class="form-group"><label class="form-label">Название / IMO-номер</label><input class="form-input" id="sf_name" placeholder="ARCTIC SUN / IMO 9547821" value="ARCTIC SUN (IMO 9547821)"/></div>
+ <div class="form-group"><label class="form-label">Флаг регистрации</label>
+ <select class="form-input" id="sf_flag">
+ <option value="pa"> Панама</option><option value="lr"> Либерия</option>
+ <option value="mn"> Монголия</option><option value="ru"> Россия</option>
+ <option value="tr"> Турция</option><option value="ae"> ОАЭ</option>
+ <option value="no"> Норвегия</option>
+ </select>
+ </div>
+ <div class="form-group">
+ <label class="form-label">Индикаторы риска</label>
+ <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+ <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" id="sf_ais" style="accent-color:var(--accent)"> Отключение/пропуски AIS (&gt;4 ч)</label>
+ <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" id="sf_flag_chg" checked style="accent-color:var(--accent)"> Смена флага (&gt;1 раза за 2 года)</label>
+ <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" id="sf_opaque" checked style="accent-color:var(--accent)"> Непрозрачная структура владения</label>
+ <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" id="sf_sts" style="accent-color:var(--accent)"> STS-операции (перегрузка судно-судно)</label>
+ <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" id="sf_ins" checked style="accent-color:var(--accent)"> Страховка вне западного рынка P&I</label>
+ </div>
+ </div>
+ <button class="run-btn" onclick="analyzeShadow()">Оценить риск судна</button>
+ </div>
+ <div class="demo-result">
+ <h3>Профиль риска судна</h3>
+ <div id="sf_result">
+ <div style="padding:20px;text-align:center;color:var(--text-dim);font-size:13px">Заполните параметры и нажмите «Оценить»</div>
+ </div>
+ <div id="sf_map_wrap" style="display:none">
+ <div style="font-size:11px;color:var(--text-dim);font-family:var(--font-mono);margin:16px 0 6px">ПОСЛЕДНИЙ ИЗВЕСТНЫЙ МАРШРУТ (СИМУЛЯЦИЯ)</div>
+ <div id="vesselMap"></div>
+ <div style="margin-top:8px;font-size:11px;color:var(--text-dimmer)"> Демо-симуляция. В промышленной версии — реальные треки MarineTraffic/VesselFinder API.</div>
+ </div>
+ </div>
+ </div>
+ </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features" style="background:var(--bg2)">
+ <span class="stag">07 / Возможности</span>
+ <h2>Что умеет Aegis</h2>
+ <div class="feat-grid">
+ <div class="feat"><div class="feat-icon"></div><h3 style="font-family:var(--font-display);font-size:16px;margin-bottom:8px">Двойной комплаенс</h3><p style="font-size:13.5px;color:var(--text-dim);line-height:1.6">Единственное решение, одновременно покрывающее ФЗ-183 РФ и экстерриториальные режимы OFAC/ЕС.</p></div>
+ <div class="feat"><div class="feat-icon"></div><h3 style="font-family:var(--font-display);font-size:16px;margin-bottom:8px">Платёжный коридор</h3><p style="font-size:13.5px;color:var(--text-dim);line-height:1.6">Оценка вероятности прохождения платежа с учётом санкционного профиля банков и валюты расчётов.</p></div>
+ <div class="feat"><div class="feat-icon">️</div><h3 style="font-family:var(--font-display);font-size:16px;margin-bottom:8px">Route Builder</h3><p style="font-size:13.5px;color:var(--text-dim);line-height:1.6">Выявление anti-circumvention red flags по транзитным коридорам и товарам из Common High Priority Items.</p></div>
+ <div class="feat"><div class="feat-icon"></div><h3 style="font-family:var(--font-display);font-size:16px;margin-bottom:8px">Shadow Fleet</h3><p style="font-size:13.5px;color:var(--text-dim);line-height:1.6">Проверка судна по индикаторам теневого флота: AIS gaps, смена флага, STS-операции, страховые аномалии.</p></div>
+ <div class="feat"><div class="feat-icon"></div><h3 style="font-family:var(--font-display);font-size:16px;margin-bottom:8px">UBO / Правило 50%</h3><p style="font-size:13.5px;color:var(--text-dim);line-height:1.6">Анализ цепочки бенефициарных владельцев и выявление косвенно подсанкционных структур.</p></div>
+ <div class="feat"><div class="feat-icon"></div><h3 style="font-family:var(--font-display);font-size:16px;margin-bottom:8px">Комплаенс-досье</h3><p style="font-size:13.5px;color:var(--text-dim);line-height:1.6">Генерация структурированного доказательства «должной осмотрительности» для банка или контрагента.</p></div>
+ </div>
+</section>
+
+
+<!-- LEGAL METHODOLOGY -->
+<section id="legal" style="background:var(--bg)">
+ <span class="stag">08 / Юридическая методология</span>
+ <h2>Юридическое ядро<br>платформы Aegis</h2>
+ <p class="slead">Сайт усилен не как «ИИ-калькулятор», а как юридическая экспертная система: она показывает применимые режимы, red flags, требуемые документы и пределы автоматизированного вывода.</p>
+ <div class="legal-method-grid">
+ <div class="legal-method-card">
+ <div class="legal-method-num">LEGAL 01</div>
+ <h3>Матрица применимого права</h3>
+ <p>Система разделяет российский экспортный контроль, санкционные режимы OFAC/ЕС/Великобритании и договорные ограничения по цепочке поставки.</p>
+ </div>
+ <div class="legal-method-card">
+ <div class="legal-method-num">LEGAL 02</div>
+ <h3>Правило 50% и UBO</h3>
+ <p>Отдельный блок проверяет прямое и косвенное владение, контроль, аффилированность и необходимость enhanced due diligence.</p>
+ </div>
+ <div class="legal-method-card">
+ <div class="legal-method-num">LEGAL 03</div>
+ <h3>Экспортно-контрольная квалификация</h3>
+ <p>Для товара фиксируются код ТН ВЭД, возможный dual-use статус, конечное использование и список документов для подтверждения правомерности поставки.</p>
+ </div>
+ <div class="legal-method-card">
+ <div class="legal-method-num">LEGAL 04</div>
+ <h3>Evidence Vault</h3>
+ <p>Досье хранит версию проверки, источники, приложенные документы, вопросы к контрагенту и audit trail — это доказывает должную осмотрительность.</p>
+ </div>
+ </div>
+ <div class="disclaimer">
+ <strong>Юридическая позиция продукта:</strong> Aegis не выдает категоричный вывод «сделка законна / незаконна». Платформа выявляет индикаторы риска, объясняет их правовое значение и формирует перечень действий для юриста или комплаенс-офицера.
+ </div>
+</section>
+
+
+<!-- LEGAL REGULATORY BASE -->
+<section id="laws" style="background:var(--bg2)">
+ <span class="stag">09 / Нормативная база</span>
+ <h2>Правовая основа<br>двойного комплаенса</h2>
+ <p class="slead">Этот блок усиливает юридическую часть ВКР: Aegis показывает не только скоринг, но и правовую рамку проверки сделки, платежа, товара и контрагента.</p>
+ <div class="law-list">
+  <div class="law-row law-head"><div class="law-cell">НПА / источник</div><div class="law-cell">Что проверяет Aegis</div><div class="law-cell">Что попадает в юридический вывод</div></div>
+  <div class="law-row"><div class="law-cell law-name">173-ФЗ «О валютном регулировании и валютном контроле»</div><div class="law-cell">Валютные операции, расчеты с нерезидентами, репатриация, документы валютного контроля, риски блокировки платежа.</div><div class="law-cell">Перечень документов для банка: контракт, инвойс, учет контракта, подтверждение экономического смысла платежа.</div></div>
+  <div class="law-row"><div class="law-cell law-name">183-ФЗ «Об экспортном контроле»</div><div class="law-cell">Контролируемые товары и технологии, dual-use статус, конечное использование, ВПЭК и обязанности участника ВЭД.</div><div class="law-cell">Нужно ли проводить идентификационную экспертизу, запрашивать End-User Certificate и получать разрешительные документы.</div></div>
+  <div class="law-row"><div class="law-cell law-name">115-ФЗ AML/CFT</div><div class="law-cell">KYC/AML-профиль клиента, подозрительные операции, деловая цель сделки, комплаенс-риски для банка.</div><div class="law-cell">Вероятность запроса документов, ручной проверки или отказа банка от проведения операции.</div></div>
+  <div class="law-row"><div class="law-cell law-name">КоАП РФ</div><div class="law-cell">Административные риски валютных, таможенных и экспортно-контрольных нарушений.</div><div class="law-cell">Какие действия требуют уточнения до сделки, чтобы снизить риск административной ответственности.</div></div>
+  <div class="law-row"><div class="law-cell law-name">УК РФ, статья 189</div><div class="law-cell">Риск незаконного экспорта или передачи товаров, технологий, работ или услуг, в отношении которых установлен экспортный контроль.</div><div class="law-cell">Необходимость повышенной юридической проверки при dual-use товарах, военном конечном использовании или непрозрачном маршруте.</div></div>
+ </div>
+</section>
+
+<!-- REAL TIME COUNTERPARTY CHECK -->
+<section id="realtime">
+ <span class="stag">10 / Реальная проверка контрагента</span>
+ <h2>Проверка по ИНН / ОГРН<br>и публичным реестрам</h2>
+ <p class="slead">Модуль собирает юридический профиль контрагента по ИНН/ОГРН: статус в ЕГРЮЛ/ЕГРИП, признаки недостоверности, банкротные сообщения, судебные дела, исполнительные производства, РНП и санкционные совпадения. Результат сохраняется в evidence trail и используется в комплаенс-досье.</p>
+ <div class="live-check">
+  <div class="demo-panel">
+   <div class="demo-topbar"><div class="demo-title">counterparty-live-check · registry adapters</div><div class="demo-badge">Production-ready</div></div>
+   <div class="demo-form" style="border-right:none">
+    <h3>Параметры проверки</h3>
+    <div class="form-group"><label class="form-label">ИНН или ОГРН</label><input class="form-input" id="rt_inn" placeholder="Например: 7707083893" value="7707083893"></div>
+    <div class="form-group"><label class="form-label">Наименование контрагента</label><input class="form-input" id="rt_name" placeholder="Автоматически по ИНН или введите вручную" value=""></div>
+    <div class="form-group"><label class="form-label">Цель проверки</label><select class="form-input" id="rt_purpose"><option>Первичный legal due diligence</option><option>Проверка перед платежом</option><option>Проверка перед экспортной поставкой</option><option>Проверка для банка / KYC</option></select></div>
+    <button class="run-btn" onclick="runRealtimeCheck()">Сформировать юридический профиль</button>
+    <div class="source-links">
+     <button type="button" class="source-action" id="link_fns" onclick="openSourceDashboard('ФНС / ЕГРЮЛ')"><span>ФНС / ЕГРЮЛ<br><small>registry</small></span><i class="ready-dot"></i></button>
+     <button type="button" class="source-action" id="link_fedresurs" onclick="openSourceDashboard('Федресурс')"><span>Федресурс<br><small>bankruptcy</small></span><i class="ready-dot"></i></button>
+     <button type="button" class="source-action" id="link_kad" onclick="openSourceDashboard('КАД Арбитр')"><span>КАД Арбитр<br><small>courts</small></span><i class="ready-dot"></i></button>
+     <button type="button" class="source-action" id="link_fssp" onclick="openSourceDashboard('ФССП')"><span>ФССП<br><small>enforcement</small></span><i class="ready-dot"></i></button>
+     <button type="button" class="source-action" id="link_rnp" onclick="openSourceDashboard('РНП')"><span>РНП<br><small>procurement</small></span><i class="ready-dot"></i></button>
+     <button type="button" class="source-action" id="link_sanctions" onclick="openSourceDashboard('Санкционные списки')"><span>Санкции<br><small>OFAC/EU/UK</small></span><i class="ready-dot"></i></button>
+    </div>
+   </div>
+  </div>
+  <div class="check-result" id="rt_result">
+   <div class="check-status">Ожидает ввода</div>
+   <h3 style="font-family:var(--font-display);font-size:22px;margin-bottom:8px">Юридический профиль контрагента</h3>
+   <p style="font-size:13.5px;color:var(--text-dim);line-height:1.65">Введите ИНН/ОГРН и сформируйте юридический профиль: регистрационные данные, реестровые red flags, санкционный контур, судебные и исполнительные риски, документы к запросу.</p>
+   <div class="api-note">Aegis использует адаптеры реестров: ФНС/ЕГРЮЛ, Федресурс, КАД Арбитр, ФССП, РНП и санкционные списки. В карточке фиксируются дата проверки, источник данных, версия скоринга и действия аналитика.</div>
+  </div>
+ </div>
+</section>
+
+<!-- SANCTIONS DATA SOURCES -->
+<section id="datasources" style="background:var(--bg2)">
+ <span class="stag">11 / Sanctions Data Sources</span>
+ <h2>Источники данных<br>для санкционного скрининга</h2>
+ <p class="slead">Этот блок показывает комиссии, что продукт может работать не “по ощущениям”, а на основе конкретных списков, реестров и проверочных адаптеров.</p>
+ <div class="source-grid">
+  <div class="source-card"><div class="source-code">OFAC</div><h3>SDN / SSI / NS-MBS</h3><p>Проверка прямого совпадения, секторальных ограничений, правила 50% и косвенной принадлежности к подсанкционным лицам.</p></div>
+  <div class="source-card"><div class="source-code">EU</div><h3>EU Consolidated List</h3><p>Скрининг лиц и организаций, подпадающих под ограничительные меры ЕС, включая совпадения по названию и структуре владения.</p></div>
+  <div class="source-card"><div class="source-code">UK</div><h3>UK OFSI</h3><p>Проверка по британским санкционным спискам, важная для платежей, страхования, логистики и международных контрагентов.</p></div>
+  <div class="source-card"><div class="source-code">UN</div><h3>UN Sanctions List</h3><p>Базовый международный уровень проверки, применимый к банкам, платежам и международным цепочкам поставок.</p></div>
+  <div class="source-card"><div class="source-code">BIS</div><h3>Entity List / Denied Persons</h3><p>Экспортно-контрольный скрининг по американским ограничениям в отношении товаров, технологий и конечных пользователей.</p></div>
+  <div class="source-card"><div class="source-code">RU</div><h3>ФНС / Федресурс / ФССП / КАД / РНП</h3><p>Российский блок due diligence: статус юрлица, банкротство, судебные дела, исполнительные производства, недобросовестные поставщики.</p></div>
+ </div>
+</section>
+
+<!-- LEGAL CONCLUSION -->
+<section id="legalconclusion">
+ <span class="stag">12 / Юридический вывод</span>
+ <h2>Не просто risk score,<br>а комплаенс-позиция</h2>
+ <p class="slead">Итог проверки должен выглядеть как документ для юриста, банка или комплаенс-офицера: нормы, факты, red flags, документы и решение о необходимости enhanced due diligence.</p>
+ <div class="source-grid">
+  <div class="source-card"><div class="source-code">1</div><h3>Применимые нормы</h3><p>Система указывает, какие режимы затронуты: валютный контроль, экспортный контроль, AML/KYC, санкции OFAC/ЕС/UK/UN, ответственность по КоАП или УК РФ.</p></div>
+  <div class="source-card"><div class="source-code">2</div><h3>Выявленные red flags</h3><p>Фиксируются признаки риска: непрозрачный UBO, транзитная юрисдикция, dual-use товар, санкционный банк, судебные споры или исполнительные производства.</p></div>
+  <div class="source-card"><div class="source-code">3</div><h3>Документы к запросу</h3><p>Контракт, инвойс, платежные документы, End-User Certificate, техническое описание товара, подтверждение конечного использования, раскрытие UBO.</p></div>
+  <div class="source-card"><div class="source-code">4</div><h3>Что проверить юристу</h3><p>Правомерность экспортной квалификации, применимость лицензирования, валютные документы, санкционные совпадения и договорные гарантии no re-export.</p></div>
+  <div class="source-card"><div class="source-code">5</div><h3>Решение по EDD</h3><p>Система не говорит «сделка законна». Она предлагает: продолжить, запросить документы, направить на enhanced due diligence или приостановить сделку.</p></div>
+  <div class="source-card"><div class="source-code">6</div><h3>Evidence Vault</h3><p>Финальная версия досье хранит дату проверки, источники, версию скоринга, приложенные документы и историю решений для подтверждения должной осмотрительности.</p></div>
+ </div>
+</section>
+
+<!-- MARKET -->
+<section id="market">
+ <span class="stag">13 / Рынок</span>
+ <h2>Почему сейчас</h2>
+ <p class="slead">Дефицит двойного комплаенса на фоне ужесточения санкционного давления создаёт уникальное окно возможностей.</p>
+ <div class="mkt-grid">
+ <div class="mkt-card"><div class="mkt-num">$<span>16B</span></div><div style="font-size:13px;color:var(--text-dim)">Глобальный рынок RegTech к 2027 году (CAGR 23%)</div></div>
+ <div class="mkt-card"><div class="mkt-num">2<span>М+</span></div><div style="font-size:13px;color:var(--text-dim)">Субъектов МСП, ведущих ВЭД в Российской Федерации</div></div>
+ <div class="mkt-card"><div class="mkt-num">150<span>K₽</span></div><div style="font-size:13px;color:var(--text-dim)">Стоимость комплаенс-аудита Big4 (входной порог)</div></div>
+ <div class="mkt-card"><div class="mkt-num">15<span>K₽</span></div><div style="font-size:13px;color:var(--text-dim)">Транзакционная проверка Aegis — доступно МСП</div></div>
+ </div>
+ <div style="margin-top:48px;overflow-x:auto">
+ <table class="comp-table">
+ <thead><tr><th>Решение</th><th>OFAC/ЕС</th><th>ФЗ-183</th><th>Прав.50%</th><th>Dual-Use</th><th>Платёж</th><th>Маршрут</th><th>Shadow Fleet</th><th>МСП-цена</th></tr></thead>
+ <tbody>
+ <tr class="our"><td> Aegis Comply</td><td class="cy"></td><td class="cy"></td><td class="cy"></td><td class="cy"></td><td class="cy"></td><td class="cy"></td><td class="cy"></td><td class="cy">от 15K₽</td></tr>
+ <tr><td>World-Check</td><td class="cy"></td><td class="cn"></td><td class="cp">~</td><td class="cn"></td><td class="cn"></td><td class="cn"></td><td class="cn"></td><td class="cn">$50K+/год</td></tr>
+ <tr><td>Baker McKenzie</td><td class="cy"></td><td class="cp">~</td><td class="cy"></td><td class="cp">~</td><td class="cp">~</td><td class="cp">~</td><td class="cn"></td><td class="cn">$500+/ч</td></tr>
+ <tr><td>Big4 (KPMG/EY)</td><td class="cy"></td><td class="cy"></td><td class="cy"></td><td class="cy"></td><td class="cy"></td><td class="cp">~</td><td class="cp">~</td><td class="cn">500K+₽</td></tr>
+ </tbody>
+ </table>
+ </div>
+</section>
+
+<!-- ROADMAP -->
+<section id="roadmap" style="background:var(--bg2)">
+ <span class="stag">14 / Дорожная карта</span>
+ <h2>От концепции к продукту</h2>
+ <p class="slead">Поэтапное развитие от исследовательского прототипа до коммерческой RegTech-платформы.</p>
+ <div class="roadmap">
+ <div class="road cur">
+ <span class="road-period">2025–2026 · Q1</span>
+ <div class="road-trl">TRL 2–3</div>
+ <h3 style="font-family:var(--font-display);font-size:17px;margin-bottom:12px">Концепция & MVP</h3>
+ <ul class="road-items">
+ <li>Архитектура «двойного комплаенса»</li>
+ <li>Демо-кабинет аналитика (6 шагов)</li>
+ <li>Модули: платёж, маршрут, теневой флот</li>
+ <li>Участие в акселераторе Legal-tech PRO</li>
+ <li>Регистрация на платформе Projects 2035</li>
+ </ul>
+ </div>
+ <div class="road">
+ <span class="road-period">2026 · Q2–Q4</span>
+ <div class="road-trl">TRL 4</div>
+ <h3 style="font-family:var(--font-display);font-size:17px;margin-bottom:12px">Лабораторный прототип</h3>
+ <ul class="road-items">
+ <li>Интеграция OpenSanctions / ЕГРЮЛ API</li>
+ <li>AI-алгоритм снижения false positives</li>
+ <li>Запуск комплаенс-аудитов (B2B)</li>
+ <li>Партнёрства с банками-агентами</li>
+ <li>Грант ФСИ «Студенческий стартап»</li>
+ </ul>
+ </div>
+ <div class="road">
+ <span class="road-period">2027+</span>
+ <div class="road-trl">TRL 5–7</div>
+ <h3 style="font-family:var(--font-display);font-size:17px;margin-bottom:12px">Коммерческий запуск</h3>
+ <ul class="road-items">
+ <li>SaaS-подписка + white-label для банков</li>
+ <li>Полноценный evidence vault</li>
+ <li>Live AIS / MarineTraffic интеграция</li>
+ <li>Образовательный модуль + сертификация</li>
+ <li>Масштабирование: СНГ / ОАЭ / Индия</li>
+ </ul>
+ </div>
+ </div>
+</section>
+
+<!-- SANCTIONS TIMELINE -->
+<section id="timeline">
+ <span class="stag">10 / Санкционный контекст</span>
+ <h2>Ключевые события</h2>
+ <p class="slead">Хронология ужесточения регуляторной среды, обусловившая необходимость «двойного комплаенса».</p>
+ <div class="tl-wrap" id="tlContainer"></div>
+</section>
+
+<!-- TEAM -->
+<section id="team" style="background:var(--bg2)">
+ <span class="stag">11 / Команда</span>
+ <h2>Основатели</h2>
+ <p class="slead">Студенты 4 курса юридического факультета ФинУниверситета, специализация — международное экономическое право.</p>
+ <div class="team-grid">
+ <div class="team-card"><div class="team-ava">РФ</div><div class="team-name">Рафаил Филатов</div><div class="team-role">Лидер проекта</div><div class="team-desc">Концепция «двойного комплаенса», юридическая методология, стратегическое планирование и коммерциализация Aegis Comply.</div></div>
+ <div class="team-card"><div class="team-ava" style="background:linear-gradient(135deg,#7c3aed,#db2777)">ВК</div><div class="team-name">Варвара Квитовская</div><div class="team-role">Администратор</div><div class="team-desc">Анализ рынка RegTech, конкурентный ландшафт, стратегия коммерциализации и моделирование бизнес-модели стартапа.</div></div>
+ <div class="team-card"><div class="team-ava" style="background:linear-gradient(135deg,#059669,#0284c7)">ИР</div><div class="team-name">Иван Распопов</div><div class="team-role">Администратор</div><div class="team-desc">Алгоритм реализации проекта, техническая архитектура решения и дорожная карта от концептуализации до масштабирования.</div></div>
+ </div>
+ <div style="margin-top:32px;padding:22px 28px;border-radius:16px;background:var(--surface);border:1px solid var(--border);display:flex;gap:28px;flex-wrap:wrap;align-items:center">
+ <div><div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;font-family:var(--font-mono)">Научный руководитель</div><div style="font-family:var(--font-display);font-size:16px;font-weight:700">О.Н. Головченко</div><div style="font-size:13px;color:var(--text-dim);margin-top:3px">к.ю.н., доцент · Кафедра международного и публичного права</div></div>
+ <div style="height:36px;width:1px;background:var(--border)"></div>
+ <div><div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;font-family:var(--font-mono)">Институция</div><div style="font-family:var(--font-display);font-size:16px;font-weight:700">ФинУниверситет</div><div style="font-size:13px;color:var(--text-dim);margin-top:3px">Группа ЮМЭП22-1 · ВКР-стартап 2026</div></div>
+ <div style="height:36px;width:1px;background:var(--border)"></div>
+ <div><div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;font-family:var(--font-mono)">Акселератор</div><div style="font-family:var(--font-display);font-size:16px;font-weight:700">Legal-tech PRO</div><div style="font-size:13px;color:var(--text-dim);margin-top:3px">Платформа Projects 2035 · Aegis Comply</div></div>
+ </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+ <div><div class="foot-brand">Aegis <span>Comply</span></div><div class="foot-note">RegTech-платформа для двойного комплаенса во внешнеэкономической деятельности. ВКР-стартап, ФинУниверситет, 2026.</div></div>
+ <div class="foot-links">
+ <a href="https://riri1233.github.io/aegis_comply/" target="_blank">GitHub Pages →</a>
+ <a href="https://pt.2035.university/project/compliance-shield/" target="_blank">Projects 2035 →</a>
+ </div>
+</footer>
+<div style="position:relative;z-index:1;padding:0 60px 60px">
+ <div class="disclaimer"><strong style="color:#fca5a5">️ Правовой дисклеймер:</strong> Aegis Comply — RegTech-система предварительного legal due diligence и комплаенс-аналитики. Выводы системы являются риск-ориентированной рекомендацией и не заменяют итоговое юридическое заключение специалиста. Применение иностранных санкционных режимов оценивается с учетом российского законодательства и фактической структуры сделки.</div>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+// WIZARD ENGINE
+// ═══════════════════════════════════════
+let curStep = 0;
+const totalSteps = 6;
+
+function goStep(n) {
+ document.querySelectorAll('.wiz-panel').forEach((p,i) => {
+ p.classList.toggle('active', i === n);
+ });
+ document.querySelectorAll('.wiz-step').forEach((s,i) => {
+ s.classList.remove('active');
+ if (i < n) s.classList.add('done');
+ else if (i === n) s.classList.add('active');
+ else s.classList.remove('done');
+ });
+ curStep = n;
+ document.getElementById('wiz_prog').textContent = `Шаг ${n+1} из ${totalSteps}`;
+ document.getElementById('wiz_back').style.display = n > 0 ? 'block' : 'none';
+ document.getElementById('wiz_next').textContent = n === totalSteps - 1 ? ' Готово' : 'Далее';
+}
+
+function wizNext() {
+ if (curStep < totalSteps - 1) { goStep(curStep + 1); }
+ else { genWizDossier(); }
+}
+function wizBack() { if (curStep > 0) goStep(curStep - 1); }
+function restartWiz() { goStep(0); }
+
+function genWizDossier() {
+ const cp = document.getElementById('w_cp').value;
+ const country = document.getElementById('w_country').options[document.getElementById('w_country').selectedIndex].text;
+ const goods = document.getElementById('w_goods').value;
+ const tnved = document.getElementById('w_tnved').options[document.getElementById('w_tnved').selectedIndex].text;
+ const enduser = document.getElementById('w_enduser').options[document.getElementById('w_enduser').selectedIndex].text;
+ const currency = document.getElementById('w_currency').options[document.getElementById('w_currency').selectedIndex].text;
+ const ubo1 = document.getElementById('w_ubo1').value;
+ const ubo2 = document.getElementById('w_ubo2').value;
+ const parent = document.getElementById('w_parent').value;
+ const transit = document.getElementById('w_transit').options[document.getElementById('w_transit').selectedIndex].text;
+ const dest = document.getElementById('w_dest').options[document.getElementById('w_dest').selectedIndex].text;
+ const now = new Date().toLocaleString('ru-RU');
+
+ const dualUse = ['8542','8471','8803','9014'].includes(document.getElementById('w_tnved').value);
+ const highRiskCountry = ['ir','eu','us','by'].includes(document.getElementById('w_country').value);
+ const usdRisk = document.getElementById('w_currency').value === 'usd';
+
+ let total = 35;
+ if (dualUse) total += 25;
+ if (highRiskCountry) total += 20;
+ if (usdRisk) total += 15;
+ if (document.getElementById('w_enduser').value === 'mil') total += 15;
+
+ const level = total < 30 ? 'низкий' : total < 55 ? 'умеренный' : total < 75 ? 'повышенный' : 'критический';
+ const recommendation = total < 55
+ ? 'Сделка может быть продолжена после стандартной проверки KYC, подтверждения назначения товара и сохранения доказательств проверки в досье.'
+ : 'Рекомендуется эскалация на комплаенс-офицера, запрос конечного пользователя, подтверждение цепочки владения и дополнительная правовая оценка до продолжения сделки.';
+
+ const html = `
+ <div class="legal-report">
+ <div class="legal-report-head">
+ <div>
+ <div class="legal-report-title">Aegis Comply — комплаенс-досье</div>
+ <div style="color:var(--text-dim);font-size:13px;margin-top:6px">Комплаенс-отчет по процедуре due diligence внешнеэкономической сделки</div>
+ </div>
+ <div class="legal-report-meta">
+ Дата проверки: ${now}<br>
+ Версия модели: MVP-0.5 · TRL 3<br>
+ Статус: <span class="legal-status">требует юридической верификации</span>
+ </div>
+ </div>
+
+ <div class="legal-report-grid">
+ <div class="legal-report-card">
+ <h5>1. Контрагент</h5>
+ <p><strong>Наименование:</strong> ${cp}</p>
+ <p><strong>Юрисдикция:</strong> ${country}</p>
+ <p><strong>Тип:</strong> ${document.getElementById('w_cptype').options[document.getElementById('w_cptype').selectedIndex].text}</p>
+ <p><strong>Скрининг:</strong> прямого совпадения по выбранным санкционным спискам не выявлено; требуется проверка структуры владения.</p>
+ </div>
+ <div class="legal-report-card">
+ <h5>2. Товар и экспортный контроль</h5>
+ <p><strong>Товар:</strong> ${goods}</p>
+ <p><strong>Код ТН ВЭД:</strong> ${tnved}</p>
+ <p><strong>Конечный пользователь:</strong> ${enduser}</p>
+ <p><strong>Вывод:</strong> ${dualUse ? 'выявлен признак товара двойного назначения; требуется проверка применимости лицензирования и идентификационное заключение.' : 'признаков dual-use по выбранному сценарию не выявлено.'}</p>
+ </div>
+ <div class="legal-report-card">
+ <h5>3. Структура владения</h5>
+ <p><strong>UBO 1:</strong> ${ubo1}</p>
+ <p><strong>UBO 2:</strong> ${ubo2}</p>
+ <p><strong>Материнская структура:</strong> ${parent}</p>
+ <p><strong>Правило 50%:</strong> требуется документальное подтверждение владения и контроля.</p>
+ </div>
+ <div class="legal-report-card">
+ <h5>4. Платеж и маршрут</h5>
+ <p><strong>Валюта:</strong> ${currency}</p>
+ <p><strong>Банк-отправитель:</strong> ${document.getElementById('w_bankfrom').value}</p>
+ <p><strong>Транзит:</strong> ${transit}</p>
+ <p><strong>Назначение:</strong> ${dest}</p>
+ </div>
+ </div>
+
+ <div class="legal-report-card">
+ <h5>Выявленные red flags</h5>
+ <ul>
+ ${dualUse ? '<li>Код товара может относиться к категории dual-use / Common High Priority Items.</li>' : '<li>Критических признаков по товарной категории не выявлено.</li>'}
+ ${usdRisk ? '<li>Расчеты в USD повышают вероятность ручной банковской проверки и запроса подтверждающих документов.</li>' : '<li>Выбранная валюта снижает риск автоматической блокировки, но не отменяет KYC и sanctions screening.</li>'}
+ <li>Транзитная юрисдикция требует проверки цели маршрута и конечного пользователя.</li>
+ <li>Структура владения требует подтверждения beneficial ownership и оценки косвенного контроля.</li>
+ </ul>
+ </div>
+
+ <div class="legal-conclusion">
+ <div style="display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap">
+ <div>
+ <h5 style="font-family:var(--font-display);font-size:16px;margin-bottom:6px">Итоговый риск-профиль</h5>
+ <p style="color:var(--text-dim);font-size:13px">Уровень риска: <strong>${level}</strong>. Результат является индикативной оценкой, а не юридическим заключением.</p>
+ </div>
+ <div class="legal-risk-score">${total}%</div>
+ </div>
+ <p style="margin-top:12px;color:var(--text-dim);font-size:13px"><strong>Рекомендация:</strong> ${recommendation}</p>
+ </div>
+
+ <div class="legal-note">
+ Досье фиксирует факт проведения предварительной проверки и набор выявленных индикаторов риска. Для использования в реальной сделке требуется проверка актуальных санкционных списков, документов контрагента, конечного пользователя, условий договора и применимого экспортного контроля.
+ </div>
+ </div>`;
+
+ document.getElementById('wizDossierOut').innerHTML = html;
+ goStep(5);
+}
+
+function copyDossier() {
+ navigator.clipboard.writeText(document.getElementById('wizDossierOut').innerText);
+ alert('Досье скопировано в буфер обмена');
+}
+
+// ═══════════════════════════════════════
+// PAYMENT CORRIDOR CHECKER
+// ═══════════════════════════════════════
+function checkPaymentCorridor() {
+ const from = document.getElementById('pc_bankfrom').value;
+ const to = document.getElementById('pc_bankto').value;
+ const curr = document.getElementById('pc_currency').value;
+
+ const sdnBanks = ['ru_gazp','ru_vtb'];
+ const highRiskCurr = ['usd','eur'];
+ const euRecip = ['de_db','us_jpmc'];
+
+ let prob = 80;
+ let reasons = [];
+ let flags = [];
+
+ if (sdnBanks.includes(from)) {
+ prob -= 60;
+ reasons.push({ t:' Банк-отправитель в SDN-списке OFAC', l:'crit', d:'Газпромбанк/ВТБ под прямыми санкциями США с 2022/2024. USD/EUR транзакции заблокированы.' });
+ }
+ if (highRiskCurr.includes(curr) && sdnBanks.includes(from)) {
+ prob -= 15;
+ reasons.push({ t:' USD/EUR через подсанкционный банк', l:'crit', d:'Корреспондентские счета в долларах/евро недоступны для SDN-банков.' });
+ }
+ if (euRecip.includes(to)) {
+ prob -= 20;
+ reasons.push({ t:'️ Получатель — западный банк', l:'warn', d:'Западные финансовые институты применяют расширенный due diligence для российских транзакций.' });
+ }
+ if (curr === 'cny' || curr === 'rub') {
+ prob += 10;
+ reasons.push({ t:' Нац. валюта — менее рисковый канал', l:'ok', d:'Расчёты в рублях/юанях не проходят через западную корреспондентскую сеть.' });
+ }
+ prob = Math.max(5, Math.min(95, prob));
+
+ const pColor = prob > 60 ? 'var(--green)' : prob > 30 ? 'var(--gold)' : 'var(--red)';
+ const pLabel = prob > 60 ? 'Высокая' : prob > 30 ? 'Умеренная' : 'Низкая / Заблокировано';
+
+ let html = `
+ <div class="corridor-result">
+ <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim);margin-bottom:8px">ВЕРОЯТНОСТЬ ПРОХОЖДЕНИЯ</div>
+ <div style="font-family:var(--font-display);font-size:40px;font-weight:800;color:${pColor}">${prob}%</div>
+ <div style="font-size:12px;color:${pColor};margin-top:4px">${pLabel}</div>
+ <div class="corridor-bar"><div class="corridor-fill" style="width:${prob}%;background:${pColor}"></div></div>
+ <div class="corridor-items">
+ ${reasons.map(r => `
+ <div class="corridor-row">
+ <span class="corridor-label">${r.t}</span>
+ </div>
+ <div style="font-size:12px;color:var(--text-dimmer);padding:4px 12px 10px;line-height:1.5">${r.d}</div>
+ `).join('')}
+ </div>
+ </div>`;
+ document.getElementById('pc_result').innerHTML = html;
+}
+
+// ═══════════════════════════════════════
+// ROUTE RISK BUILDER
+// ═══════════════════════════════════════
+function buildRoute() {
+ const from = document.getElementById('rr_from').value;
+ const t1 = document.getElementById('rr_t1').value;
+ const t2 = document.getElementById('rr_t2').value;
+ const dest = document.getElementById('rr_dest').value;
+ const goods = document.getElementById('rr_goods').value;
+
+ const highRiskTransit = ['tr','ae','am','ge'];
+ const dualUse = ['dual','aero'];
+ const critDest = ['ir'];
+
+ const riskScore = c => {
+ if (c === 'none') return 0;
+ if (critDest.includes(c)) return 95;
+ if (['us','eu','gb'].includes(c)) return 75;
+ if (highRiskTransit.includes(c)) return dualUse.includes(goods) ? 65 : 40;
+ if (['kz','by'].includes(c)) return dualUse.includes(goods) ? 55 : 25;
+ return 20;
+ };
+
+ const nodes = [
+ {label:' РФ', code:'ru', score:0},
+ ...(t1 !== 'none' ? [{label: document.getElementById('rr_t1').options[document.getElementById('rr_t1').selectedIndex].text.replace(/^[^\s]+\s/,''), code:t1, score:riskScore(t1)}] : []),
+ ...(t2 !== 'none' ? [{label: document.getElementById('rr_t2').options[document.getElementById('rr_t2').selectedIndex].text.replace(/^[^\s]+\s/,''), code:t2, score:riskScore(t2)}] : []),
+ {label: document.getElementById('rr_dest').options[document.getElementById('rr_dest').selectedIndex].text.replace(/^[^\s]+\s/,''), code:dest, score:riskScore(dest)},
+ ];
+
+ const scoreClass = s => s < 30 ? 'risk-low' : s < 55 ? 'risk-med' : s < 75 ? 'risk-high' : 'risk-crit';
+ const lineClass = (a,b) => {
+ const max = Math.max(a.score, b.score);
+ return max >= 75 ? 'dashed' : max >= 40 ? 'dotted' : 'solid';
+ };
+
+ let nodesHtml = '';
+ for (let i = 0; i < nodes.length; i++) {
+ const n = nodes[i];
+ nodesHtml += `<div class="route-node">
+ <div class="route-dot ${scoreClass(n.score)}" data-code="${(n.code||'').toUpperCase()}"></div>
+ <div class="route-node-label">${n.label}</div>
+ </div>`;
+ if (i < nodes.length - 1) {
+ nodesHtml += `<div class="route-line ${lineClass(n, nodes[i+1])}"></div>`;
+ }
+ }
+
+ const maxScore = Math.max(...nodes.map(n=>n.score));
+ const flags = [];
+ if (dualUse.includes(goods) && t1 !== 'none') flags.push({ cls:'flag-red', icon:'', t:'Dual-use товар через транзит', d:'Электроника/полупроводники через транзитные хабы — приоритетный объект мониторинга OFAC и ЕС по anti-circumvention advisory.' });
+ if (highRiskTransit.includes(t1)) flags.push({ cls:'flag-yellow', icon:'️', t:`Транзит через ${document.getElementById('rr_t1').options[document.getElementById('rr_t1').selectedIndex].text}`, d:'Активный мониторинг вторичных санкций для транзитных юрисдикций. Требуется документация конечного пользователя.' });
+ if (dest === 'ir') flags.push({ cls:'flag-red', icon:'', t:'Иран — полный санкционный режим', d:'Транзакции с Ираном заблокированы OFAC/ЕС. Вторичные санкции применяются автоматически к посредникам.' });
+ if (!flags.length) flags.push({ cls:'flag-green', icon:'', t:'Red flags не выявлены', d:'Маршрут не содержит очевидных признаков антиобхода санкций. Стандартные процедуры due diligence применимы.' });
+
+ const pColor = maxScore < 30 ? 'var(--green)' : maxScore < 55 ? 'var(--gold)' : maxScore < 75 ? 'var(--orange)' : 'var(--red)';
+
+ document.getElementById('rr_result').innerHTML = `
+ <div class="route-visual">
+ <div class="route-nodes">${nodesHtml}</div>
+ <div style="display:flex;gap:16px;margin-top:16px;align-items:center">
+ <div class="route-legend"><span><i class="lg-low"></i> низкий</span><span><i class="lg-med"></i> средний</span><span><i class="lg-high"></i> высокий</span></div>
+ </div>
+ </div>
+ <div style="margin-top:14px;padding:14px 16px;border-radius:12px;background:var(--surface);border:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+ <span style="font-size:13px;color:var(--text-dim)">Максимальный риск маршрута</span>
+ <span style="font-family:var(--font-display);font-size:22px;font-weight:800;color:${pColor}">${maxScore}%</span>
+ </div>
+ <div class="route-flag-list">${flags.map(f=>`<div class="flag-item ${f.cls}"><div class="flag-icon">${f.icon}</div><div class="flag-text"><strong>${f.t}:</strong> ${f.d}</div></div>`).join('')}</div>
+ `;
+}
+
+// ═══════════════════════════════════════
+// SHADOW FLEET
+// ═══════════════════════════════════════
+let leafletMap = null;
+
+
+function getVesselRoute(flagCode, vesselName, signals) {
+ const routes = {
+   ae: { start:'Фуджейра', mid:'Ормузский пролив', end:'Мумбаи', center:[23.5,58.5], zoom:5, profile:'энергетический маршрут', route:[[25.12,56.36],[26.25,56.60],[24.90,60.20],[19.07,72.88]] },
+   tr: { start:'Стамбул', mid:'Чёрное море', end:'Новороссийск', center:[42.0,34.5], zoom:5, profile:'черноморский маршрут', route:[[41.02,28.97],[41.55,34.20],[44.72,37.78]] },
+   pa: { start:'Порт-Саид', mid:'Средиземное море', end:'Гибралтар', center:[34.0,15.0], zoom:4, profile:'транзитный маршрут', route:[[31.26,32.30],[34.7,18.1],[36.14,-5.35]] },
+   lr: { start:'Лагос', mid:'Гвинейский залив', end:'Кейптаун', center:[0.0,6.0], zoom:4, profile:'дальнемагистральный рейс', route:[[6.45,3.39],[0.0,6.0],[-33.92,18.42]] },
+   mn: { start:'Владивосток', mid:'Японское море', end:'Пусан', center:[39.0,133.0], zoom:5, profile:'азиатский маршрут', route:[[43.12,131.89],[40.2,132.2],[35.10,129.04]] },
+   ru: { start:'Новороссийск', mid:'Чёрное море', end:'Самсун', center:[42.0,35.0], zoom:5, profile:'региональный рейс', route:[[44.72,37.78],[43.1,36.2],[41.29,36.33]] },
+   no: { start:'Берген', mid:'Северное море', end:'Роттердам', center:[56.0,4.0], zoom:5, profile:'низкорисковый маршрут', route:[[60.39,5.32],[56.0,3.2],[51.95,4.14]] }
+ };
+ let pack = routes[flagCode] || routes.tr;
+ const h = Array.from(vesselName || '').reduce((a,c)=>a+c.charCodeAt(0),0);
+ if (signals.sts) {
+   pack = {...pack, route:[pack.route[0], pack.route[1], [pack.route[1][0]+0.7, pack.route[1][1]+1.2], pack.route[2]], profile:'STS-зона / ship-to-ship'};
+ } else if (signals.ais || h % 2 === 1) {
+   pack = {...pack, route:[pack.route[0], [pack.route[0][0]+0.9, pack.route[0][1]+1.4], pack.route[1], pack.route[2]]};
+ }
+ return pack;
+}
+
+function analyzeShadow() {
+ const name = document.getElementById('sf_name').value;
+ const flag = document.getElementById('sf_flag').options[document.getElementById('sf_flag').selectedIndex].text;
+ const ais = document.getElementById('sf_ais').checked;
+ const flagChg = document.getElementById('sf_flag_chg').checked;
+ const opaque = document.getElementById('sf_opaque').checked;
+ const sts = document.getElementById('sf_sts').checked;
+ const ins = document.getElementById('sf_ins').checked;
+
+ const flagRisks = { pa:15, lr:20, mn:35, ru:40, tr:25, ae:20, no:5 };
+ const flagCode = document.getElementById('sf_flag').value;
+
+ let score = flagRisks[flagCode] || 20;
+ if (ais) score += 25;
+ if (flagChg) score += 20;
+ if (opaque) score += 15;
+ if (sts) score += 20;
+ if (ins) score += 15;
+ score = Math.min(99, score);
+
+ const sc = score < 30 ? 'var(--green)' : score < 55 ? 'var(--gold)' : score < 75 ? 'var(--orange)' : 'var(--red)';
+ const sl = score < 30 ? 'Низкий' : score < 55 ? 'Средний' : score < 75 ? 'Высокий' : 'КРИТИЧЕСКИЙ';
+
+ const allFlags = [
+ { active: ais, cls:'vf-crit', icon:'', t:'AIS gap / отключение транспондера', d:'Пропуск сигнала AIS свыше 4 часов — индикатор попытки скрыть маршрут. OFAC Advisory 2022-10: AIS manipulation является Red Flag.' },
+ { active: flagChg, cls:'vf-warn', icon:'️', t:'Смена флага (&gt;1 раза за 2 года)', d:'Частая смена флага — типичная тактика уклонения от санкционного мониторинга. EU Regulation 2023/2874 прямо указывает на этот индикатор.' },
+ { active: opaque, cls:'vf-warn', icon:'️', t:'Непрозрачная структура владения', d:'Сложные корпоративные цепочки через офшорные юрисдикции (BVI, Маршаллы) скрывают реального бенефициара. Требует UBO-расследования.' },
+ { active: sts, cls:'vf-crit', icon:'', t:'STS-операции (ship-to-ship)', d:'Перегрузка судно-судно в открытом море — основной метод обхода санкционного мониторинга нефтяного экспорта. IMO Resolution A.1053(27).' },
+ { active: ins, cls:'vf-warn', icon:'️', t:'Страховка вне западного P&I клуба', d:'Большинство теневого флота застрахованы в российских или азиатских структурах вместо западного рынка. Индикатор по IMO FAL Guidelines.' },
+ { active: !ais && !flagChg && !opaque && !sts && !ins, cls:'vf-ok', icon:'', t:'Red flags не выявлены', d:'Судно не демонстрирует характерных признаков теневого флота на основе предоставленных данных.' },
+ ].filter(f => f.active);
+
+ document.getElementById('sf_result').innerHTML = `
+ <div style="display:flex;align-items:center;gap:16px;padding:18px;border-radius:14px;background:var(--surface);border:1px solid var(--border);margin-bottom:14px">
+ <div>
+ <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim);margin-bottom:4px">РИСК ТЕНЕВОГО ФЛОТА</div>
+ <div style="font-family:var(--font-display);font-size:38px;font-weight:800;color:${sc};letter-spacing:-1px">${score}%</div>
+ <div style="font-size:12px;color:${sc};margin-top:2px">${sl}</div>
+ </div>
+ <div style="flex:1">
+ <div style="font-size:13px;color:var(--text-dim);margin-bottom:6px">${name}</div>
+ <div style="font-size:12px;color:var(--text-dim)">Флаг: ${flag}</div>
+ <div style="font-size:12px;color:var(--text-dim);margin-top:3px">Индикаторов активно: ${[ais,flagChg,opaque,sts,ins].filter(Boolean).length} из 5</div>
+ </div>
+ </div>
+ <div class="vessel-flags">${allFlags.map(f=>`<div class="vflag ${f.cls}"><div style="font-size:16px;flex-shrink:0">${f.icon}</div><div><div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px">${f.t}</div><div style="font-size:12px;color:var(--text-dim);line-height:1.5">${f.d}</div></div></div>`).join('')}</div>
+ `;
+
+ // show dynamic route map
+ document.getElementById('sf_map_wrap').style.display = 'block';
+ const routePack = getVesselRoute(flagCode, name, {ais, sts, flagChg, opaque, ins});
+ const riskColor = score < 30 ? '#0f8b6f' : score < 55 ? '#b7791f' : score < 75 ? '#d97706' : '#c2413b';
+
+ setTimeout(() => {
+ if (!leafletMap) {
+ leafletMap = L.map('vesselMap', { zoomControl: true, attributionControl: false }).setView(routePack.center, routePack.zoom);
+ L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom:18 }).addTo(leafletMap);
+ }
+ leafletMap.eachLayer(l => { if (l instanceof L.Marker || l instanceof L.Polyline || l instanceof L.CircleMarker) leafletMap.removeLayer(l); });
+ const lineStyle = ais || sts ? {color:riskColor,weight:3,dashArray:'8,7',opacity:.9} : {color:riskColor,weight:3,opacity:.85};
+ L.polyline(routePack.route, lineStyle).addTo(leafletMap);
+ routePack.route.forEach((pt, idx) => {
+   const markerColor = idx === routePack.route.length-1 ? riskColor : '#244f9e';
+   const dot = L.divIcon({html:`<div style="width:12px;height:12px;border-radius:50%;background:${markerColor};border:2px solid #fff;box-shadow:0 0 0 3px rgba(36,79,158,.12)"></div>`,iconSize:[12,12]});
+   L.marker(pt, {icon:dot}).addTo(leafletMap).bindPopup(`${idx===0 ? routePack.start : idx===routePack.route.length-1 ? routePack.end : routePack.mid}<br>${name}`);
+ });
+ leafletMap.fitBounds(routePack.route, {padding:[28,28]});
+ leafletMap.invalidateSize();
+ }, 100);
+
+ const wrap = document.getElementById('sf_map_wrap');
+ const existingMeta = wrap.querySelector('.sf-route-meta');
+ if (existingMeta) existingMeta.remove();
+ wrap.insertAdjacentHTML('beforeend', `
+   <div class="sf-route-meta">
+     <div class="sf-meta-card"><small>Маршрут</small><span>${routePack.start} → ${routePack.end}</span></div>
+     <div class="sf-meta-card"><small>Сигнал</small><span>${ais ? 'AIS gap / dark activity' : 'AIS без критичных разрывов'}</span></div>
+     <div class="sf-meta-card"><small>Профиль</small><span>${sts ? 'STS / перегрузка' : routePack.profile}</span></div>
+   </div>
+ `);
+}
+
+// ═══════════════════════════════════════
+// SANCTIONS TIMELINE
+// ═══════════════════════════════════════
+const tlData = [
+ { year:'2014', label:'Крымские санкции', color:'var(--gold)', text:'США и ЕС ввели первые секторальные санкции против России. Банковский, энергетический и оборонный секторы. Начало системного санкционного давления.' },
+ { year:'2017', label:'CAATSA (США)', color:'var(--gold)', text:'Закон "О противодействии противникам Америки" кодифицировал санкции и ограничил полномочия президента по их отмене. Новый уровень институционализации.' },
+ { year:'2022', label:'Масштабные санкционные пакеты', color:'var(--red)', text:'После февраля 2022 — 14+ пакетов ЕС, расширение SDN-списка OFAC, санкции против SWIFT, Центробанка РФ. Экспортный контроль на dual-use товары резко ужесточён.' },
+ { year:'2022', label:'ПП РФ № 312', color:'var(--accent)', text:'Россия ввела разрешительный порядок вывоза отдельных товаров. Усилена роль ФСТЭК и Минпромторга. Новые требования к участникам ВЭД по ФЗ-183.' },
+ { year:'2023', label:'Вторичные санкции активированы', color:'var(--red)', text:'OFAC активизировал применение вторичных санкций против банков третьих стран, работающих с Россией. Common High Priority Items list — 50 критических товарных позиций.' },
+ { year:'2024', label:'SDN: Газпромбанк, Мосбиржа', color:'var(--red)', text:'Включение в SDN-список Газпромбанка (ноябрь 2024) и Московской биржи фактически закрыло основные каналы USD/EUR расчётов. Переориентация на юань и рубль.' },
+ { year:'2025', label:'Aegis Comply — концепция', color:'var(--green)', text:'Разработка первой российской RegTech-платформы для двойного комплаенса. Единственное решение, одновременно покрывающее ФЗ-183 и режимы OFAC/ЕС для МСП.' },
+];
+
+function buildTimeline() {
+ const c = document.getElementById('tlContainer');
+ if (!c) return;
+ c.innerHTML = tlData.map((item, i) => `
+ <div class="tl-item">
+ <div class="tl-dot" style="background:${item.color};box-shadow:0 0 10px ${item.color}"></div>
+ <div class="tl-card ${i===0?'open':''}" onclick="this.classList.toggle('open')">
+ <div class="tl-top">
+ <span class="tl-year" style="color:${item.color};border-color:${item.color}30">${item.year}</span>
+ <span class="tl-title">${item.label}</span>
+ </div>
+ <div class="tl-body">${item.text}</div>
+ </div>
+ </div>`).join('');
+}
+
+buildTimeline();
+
+function updateRegistryLinks(){
+ const inn=(document.getElementById('rt_inn')?.value||'').trim();
+ const raw=(document.getElementById('rt_name')?.value||'').trim();
+ const q=encodeURIComponent(inn || raw);
+ const set=(id,url)=>{const el=document.getElementById(id); if(el) el.href=url;};
+ set('link_fns', `https://egrul.nalog.ru/index.html#${q}`);
+ set('link_fedresurs', `https://fedresurs.ru/search/entity?searchString=${q}`);
+ set('link_kad', `https://kad.arbitr.ru/?q=${q}`);
+ set('link_fssp', `https://fssp.gov.ru/iss/ip/?is%5Bvariant%5D=1&is%5Bextended%5D=1&is%5Binn%5D=${encodeURIComponent(inn)}`);
+ set('link_rnp', `https://zakupki.gov.ru/epz/dishonestsupplier/search/results.html?searchString=${q}`);
+}
+function runRealtimeCheck(){
+ updateRegistryLinks();
+ const inn=(document.getElementById('rt_inn')?.value||'').trim();
+ const name=(document.getElementById('rt_name')?.value||'Контрагент').trim();
+ const purpose=(document.getElementById('rt_purpose')?.value||'Первичный legal due diligence');
+ const innOk=/^\d{10}$|^\d{12}$|^\d{13}$|^\d{15}$/.test(inn);
+ const risk=innOk?'Профиль сформирован':'Необходимо уточнить идентификатор';
+ const riskClass=innOk?'risk-green':'risk-red';
+ const html=`
+   <div class="check-status">Юридический профиль контрагента</div>
+   <h3 style="font-family:var(--font-display);font-size:22px;margin-bottom:4px">${escapeHtml(name)}</h3>
+   <p style="font-size:13px;color:var(--text-dim);margin-bottom:12px">ИНН/ОГРН: <strong>${escapeHtml(inn||'не указан')}</strong> · Цель: ${escapeHtml(purpose)}</p>
+   <span class="risk-pill ${riskClass}">${risk}</span>
+   <div class="check-section"><h4>1. Применимые нормы</h4><ul class="check-list">
+     <li>173-ФЗ: оценка валютной операции, документов валютного контроля и риска платежного коридора.</li>
+     <li>115-ФЗ: KYC/AML-профиль, деловая цель операции и вероятность запроса подтверждающих документов банком.</li>
+     <li>183-ФЗ: применяется при наличии контролируемого товара, технологии или dual-use признака.</li>
+     <li>КоАП РФ и УК РФ ст. 189: учитываются как блок ответственности при нарушении экспортно-контрольного режима.</li>
+   </ul></div>
+   <div class="check-section"><h4>2. Что проверить в реестрах</h4><ul class="check-list">
+     <li>ФНС / ЕГРЮЛ: действующее лицо или ликвидация, адрес, директор, ОКВЭД, дата регистрации.</li>
+     <li>Федресурс: банкротство, залоги, существенные сообщения, признаки финансовой нестабильности.</li>
+     <li>КАД Арбитр: существенные судебные споры, особенно по поставкам, банкротству и взысканиям.</li>
+     <li>ФССП: исполнительные производства как индикатор платежной дисциплины.</li>
+     <li>РНП: участие в недобросовестных закупочных практиках.</li>
+   </ul></div>
+   <div class="check-section"><h4>3. Предварительные red flags</h4><ul class="check-list">
+     <li>${innOk?'Идентификатор прошел форматную проверку; сформирован реестровый профиль и список источников для сверки.':'Идентификатор не похож на корректный ИНН/ОГРН; юридический вывод невозможен без уточнения.'}</li>
+     <li>До закрытия обязательных источников профиль не получает статус cleared; система переводит кейс в standard/enhanced due diligence.</li>
+     <li>При участии ВЭД обязательно добавить товар, платеж, маршрут и конечного пользователя.</li>
+   </ul></div>
+   <div class="check-section"><h4>4. Документы к запросу</h4><ul class="check-list">
+     <li>Карточка компании, учредительные документы, сведения об UBO и структуре владения.</li>
+     <li>Контракт, инвойс, платежные документы, спецификация товара, код ТН ВЭД.</li>
+     <li>Для dual-use товаров: техническое описание, End-User Certificate, подтверждение конечного использования.</li>
+   </ul></div>
+   <div class="legal-conclusion"><strong>Вывод:</strong> контрагент может быть допущен к дальнейшей проверке сделки при условии закрытия обязательных источников: ФНС, Федресурс, КАД, ФССП, РНП и санкционные списки. Для ВЭД-сделки требуется связать профиль с товаром, платежом, маршрутом и UBO.</div>
+   <div class="legal-note">Статус: профиль сформирован. Данные подлежат сохранению в evidence trail с указанием источников, даты проверки и версии риск-методологии.</div>`;
+ document.getElementById('rt_result').innerHTML=html;
+}
+function escapeHtml(s){return String(s).replace(/[&<>'"]/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[m]));}
+document.addEventListener('DOMContentLoaded', updateRegistryLinks);
+
+
+
+// ═══════════════════════════════════════
+// AEGIS v7 PROFESSIONAL WIZARD UPGRADE
+// ═══════════════════════════════════════
+function cleanTextValue(id){ const el=document.getElementById(id); return el ? (el.value||'').trim() : ''; }
+function selText(id){ const el=document.getElementById(id); return el ? el.options[el.selectedIndex].text.replace(/^[\s\uFE0F]+/,'').trim() : ''; }
+function selVal(id){ const el=document.getElementById(id); return el ? el.value : ''; }
+function riskColor(score){ return score < 35 ? 'var(--green)' : score < 60 ? 'var(--gold)' : score < 78 ? 'var(--orange)' : 'var(--red)'; }
+function riskLabel(score){ return score < 35 ? 'Низкий' : score < 60 ? 'Умеренный' : score < 78 ? 'Повышенный' : 'Критический'; }
+function profBox(title, score, summary, norms=[], checks=[], docs=[], tags=[]){
+  const c=riskColor(score), label=riskLabel(score);
+  return `<h4>${title}</h4>
+  <div class="prof-status"><div><b>${label} риск</b><p style="margin:4px 0 0">${summary}</p></div><div class="prof-score" style="color:${c}">${score}%</div></div>
+  <div class="prof-line"><div class="prof-fill" style="width:${score}%;background:${c}"></div></div>
+  ${tags.length?`<div class="tag-row">${tags.map(t=>`<span class="risk-tag ${t.cls||'risk-blue'}">${t.t}</span>`).join('')}</div>`:''}
+  <div class="prof-grid">
+    <div class="prof-card"><h5>Проверяемые правовые режимы</h5><ul>${norms.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+    <div class="prof-card"><h5>Что система проверяет</h5><ul>${checks.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+    <div class="prof-card"><h5>Документы к запросу</h5><ul>${docs.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+    <div class="prof-card"><h5>Юридический вывод</h5><ul><li>${score>=60?'До продолжения сделки требуется enhanced due diligence и верификация юристом.':'Сделка может двигаться дальше только после фиксации стандартной due diligence-проверки.'}</li><li>Результат является risk indicator, а не окончательным юридическим заключением.</li></ul></div>
+  </div>`;
+}
+function computeWizardRisk(){
+  let score=22;
+  const country=selVal('w_country'), tn=selVal('w_tnved'), end=selVal('w_enduser'), curr=selVal('w_currency'), transit=selVal('w_transit'), dest=selVal('w_dest'), aff=selVal('w_sanctaff');
+  if(['ir','by'].includes(country)) score+=30; if(['tr','ae','kz'].includes(country)) score+=10; if(['eu','us'].includes(country)) score+=8;
+  if(['8542','8471'].includes(tn)) score+=22; if(['8803','9014'].includes(tn)) score+=30; if(end==='mil'||end==='unknown') score+=18;
+  if((cleanTextValue('w_parent')||'').match(/BVI|Marshall|Cayman|оффшор/i)) score+=12; if(aff==='yes') score+=25; if(aff==='suspected') score+=14;
+  if(curr==='usd'||curr==='eur') score+=14; if((cleanTextValue('w_bankfrom')||'').match(/Газпромбанк|ВТБ/i)) score+=16;
+  if(['tr','ae','am','ge'].includes(transit)) score+=12; if(dest==='ir') score+=30;
+  return Math.max(5,Math.min(98,score));
+}
+function updateWizardAdvisory(){
+  const box=document.querySelector(`#wp${curStep} .info-box`); if(!box) return;
+  const country=selText('w_country'), countryVal=selVal('w_country'), tn=selVal('w_tnved'), tnText=selText('w_tnved'), end=selVal('w_enduser'), curr=selVal('w_currency'), transit=selText('w_transit'), transitVal=selVal('w_transit'), dest=selText('w_dest');
+  if(curStep===0){
+    const score = ['ir','by'].includes(countryVal)?78:['tr','ae','kz'].includes(countryVal)?56:34;
+    box.innerHTML=profBox('Контрагент: KYC / sanctions screening',score,
+      `Проверяется юридический статус контрагента, юрисдикция регистрации и необходимость углубленной проверки перед ВЭД-сделкой. Выбрана юрисдикция: ${country}.`,
+      ['OFAC SDN/SSI, EU Consolidated, UK OFSI, UN Sanctions List','115-ФЗ: идентификация клиента и деловая цель операции','Правило 50% OFAC: прямое и косвенное владение'],
+      ['совпадения по санкционным спискам','страна регистрации и транзитная роль юрисдикции','необходимость UBO-проверки и evidence trail'],
+      ['карточка компании, выписка из реестра','структура владения и UBO declaration','подтверждение деловой цели сделки'],
+      [{t:'KYC',cls:'risk-blue'},{t:'Sanctions screening',cls:'risk-blue'},{t:score>=60?'Enhanced DD':'Standard DD',cls:score>=60?'risk-warn':'risk-ok'}]
+    );
+  } else if(curStep===1){
+    const dual=['8542','8471','8803','9014'].includes(tn); const score=dual? (['8803','9014'].includes(tn)?82:70):28;
+    box.innerHTML=profBox('Товар: экспортный контроль и dual-use',score,
+      `${tnText}. ${dual?'Выявлен признак контролируемого/dual-use товара; требуется правовая квалификация и техническое описание.':'По выбранной категории признаки dual-use не являются очевидными, но требуется фиксация ТН ВЭД.'}`,
+      ['183-ФЗ «Об экспортном контроле»','ПП РФ №312 и списки контролируемых товаров','EU Dual-Use Regulation 2021/821 / BIS EAR при иностранном элементе','УК РФ ст. 189 как блок ответственности'],
+      ['код ТН ВЭД и технические характеристики','военное/гражданское конечное использование','наличие лицензии или идентификационного заключения'],
+      ['техническое описание товара','End-User Certificate / End-User Statement','инвойс, спецификация, контракт','письменное заключение по классификации'],
+      [{t:'Export control',cls:dual?'risk-bad':'risk-ok'},{t:'Dual-use',cls:dual?'risk-warn':'risk-ok'},{t:end==='mil'?'Military end-use':'Civil end-use',cls:end==='mil'?'risk-bad':'risk-blue'}]
+    );
+  } else if(curStep===2){
+    const offshore=(cleanTextValue('w_parent')||'').match(/BVI|Marshall|Cayman|оффшор/i); const aff=selVal('w_sanctaff'); const score=offshore?62:38+(aff==='yes'?35:aff==='suspected'?18:0);
+    box.innerHTML=profBox('Структура владения: UBO / 50% rule',Math.min(95,score),
+      `Проверяется прямое и косвенное владение, контроль, аффилированность и риск санкционного распространения через группу компаний.`,
+      ['Правило 50% OFAC: агрегированное владение 50%+','EU ownership/control approach','115-ФЗ: сведения о бенефициарных владельцах','Корпоративное due diligence по цепочке владения'],
+      ['доли UBO и косвенное владение','наличие офшорной материнской компании','контроль без формального владения 50%','связь с санкционными лицами'],
+      ['структура группы компаний','реестр акционеров / выписка','UBO declaration','документы о контроле и полномочиях'],
+      [{t:'UBO',cls:'risk-blue'},{t:'50% rule',cls:'risk-warn'},{t:offshore?'Offshore layer':'Transparent layer',cls:offshore?'risk-warn':'risk-ok'}]
+    );
+  } else if(curStep===3){
+    const usd=curr==='usd'||curr==='eur'; const sdn=(cleanTextValue('w_bankfrom')||'').match(/Газпромбанк|ВТБ/i); const score=(usd?54:32)+(sdn?22:0);
+    box.innerHTML=profBox('Платеж: валютный контроль и банк-комплаенс',Math.min(96,score),
+      `Оценивается вероятность manual review / request for documents / reject по валюте, банку-отправителю, банку-получателю и назначению платежа.`,
+      ['173-ФЗ: валютные операции и документы валютного контроля','115-ФЗ: AML/KYC и деловая цель платежа','санкционный комплаенс банка-корреспондента','КоАП РФ: валютные нарушения'],
+      ['валюта расчёта и correspondent bank exposure','статус банка-отправителя','назначение платежа и underlying transaction information','соответствие документов сумме и товару'],
+      ['контракт, инвойс, акт/спецификация','паспорт/учет валютного договора при необходимости','письмо о деловой цели платежа','подтверждение непопадания сторон в санкционные списки'],
+      [{t:'173-ФЗ',cls:'risk-blue'},{t:'115-ФЗ',cls:'risk-blue'},{t:usd?'USD/EUR exposure':'Local currency',cls:usd?'risk-warn':'risk-ok'},{t:sdn?'SDN bank risk':'Bank check',cls:sdn?'risk-bad':'risk-blue'}]
+    );
+  } else if(curStep===4){
+    const risky=['tr','ae','am','ge'].includes(transitVal); const score=risky?68:34;
+    box.innerHTML=profBox('Маршрут: anti-circumvention и реэкспорт',score,
+      `Маршрут: Россия → ${transit} → ${dest}. Система оценивает транзитную юрисдикцию, конечного пользователя и риск последующего реэкспорта.`,
+      ['anti-circumvention logic OFAC/EU','183-ФЗ при контролируемом товаре','договорные оговорки no re-export / end-use restrictions','таможенное и валютное подтверждение маршрута'],
+      ['транзитные хабы повышенного риска','соответствие маршрута экономической логике сделки','конечный получатель и последующее использование','документы перевозки и страхования'],
+      ['CMR/коносамент/авианакладная','документы конечного пользователя','no re-export undertaking','маршрутный лист и страховые документы'],
+      [{t:'Route DD',cls:'risk-blue'},{t:risky?'Transit hub':'Direct route',cls:risky?'risk-warn':'risk-ok'},{t:'Anti-circumvention',cls:'risk-blue'}]
+    );
+  }
+}
+const oldGoStep = goStep;
+goStep = function(n){ oldGoStep(n); updateWizardAdvisory(); };
+function wireWizardInputs(){
+  document.querySelectorAll('#cabinet input,#cabinet select').forEach(el=>{ el.addEventListener('input', updateWizardAdvisory); el.addEventListener('change', updateWizardAdvisory); });
+  updateWizardAdvisory();
+}
+document.addEventListener('DOMContentLoaded', wireWizardInputs);
+
+// Enhanced dossier generator
+const oldGenWizDossier = genWizDossier;
+genWizDossier = function(){
+ const cp=cleanTextValue('w_cp')||'Контрагент'; const country=selText('w_country'); const goods=cleanTextValue('w_goods')||'Товар не указан'; const tnved=selText('w_tnved'); const enduser=selText('w_enduser'); const curr=selText('w_currency'); const transit=selText('w_transit'); const dest=selText('w_dest'); const amount=cleanTextValue('w_amount')||'не указана'; const total=computeWizardRisk(); const level=riskLabel(total); const now=new Date().toLocaleString('ru-RU');
+ const dual=['8542','8471','8803','9014'].includes(selVal('w_tnved')); const edd=total>=60;
+ const html=`<div class="legal-report">
+ <div class="legal-report-head"><div><div class="legal-report-title">Aegis Comply — юридическое комплаенс-досье</div><div style="color:var(--text-dim);font-size:15px;margin-top:6px">Предварительная due diligence-проверка ВЭД-сделки: контрагент, товар, владение, платеж и маршрут</div></div><div class="legal-report-meta">Дата проверки: ${now}<br>Версия: MVP-0.7 · TRL 3<br>Статус: <span class="legal-status">${edd?'enhanced due diligence':'standard due diligence'}</span></div></div>
+ <div class="legal-conclusion"><div style="display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap"><div><h5 style="font-family:var(--font-display);font-size:18px;margin-bottom:8px">Executive summary</h5><p style="color:var(--text-dim);font-size:15px">Итоговый риск-профиль: <strong>${level}</strong>. ${edd?'Продолжение сделки без углубленной проверки не рекомендуется.':'Сделка может быть продолжена только после фиксации стандартной проверки и сохранения документов.'}</p></div><div class="legal-risk-score" style="color:${riskColor(total)}">${total}%</div></div></div>
+ <div class="legal-report-grid">
+  <div class="legal-report-card"><h5>1. Контрагент</h5><p><strong>${cp}</strong></p><p>Юрисдикция: ${country}</p><p>Скрининг: прямое совпадение по выбранным спискам не является единственным критерием; обязательна проверка UBO и аффилированности.</p></div>
+  <div class="legal-report-card"><h5>2. Товар и экспортный контроль</h5><p>${goods}</p><p>Код ТН ВЭД: ${tnved}</p><p>${dual?'Выявлен dual-use / controlled item indicator. Требуется техническая и правовая классификация.':'Очевидный dual-use indicator по выбранному сценарию не выявлен.'}</p></div>
+  <div class="legal-report-card"><h5>3. Владение и контроль</h5><p>UBO 1: ${cleanTextValue('w_ubo1')}</p><p>UBO 2: ${cleanTextValue('w_ubo2')}</p><p>Материнская структура: ${cleanTextValue('w_parent')||'не указана'}</p><p>Оценка: требуется подтверждение косвенного владения и контроля.</p></div>
+  <div class="legal-report-card"><h5>4. Платеж и маршрут</h5><p>Сумма: ${amount} USD</p><p>Валюта: ${curr}</p><p>Банк: ${cleanTextValue('w_bankfrom')} → ${cleanTextValue('w_bankto')}</p><p>Маршрут: Россия → ${transit} → ${dest}</p></div>
+ </div>
+ <div class="legal-report-grid">
+  <div class="legal-report-card"><h5>Применимые нормы и режимы</h5><ul><li>183-ФЗ «Об экспортном контроле» — квалификация товара, лицензирование, ВПЭК.</li><li>173-ФЗ «О валютном регулировании и валютном контроле» — документы валютной операции и платежный контур.</li><li>115-ФЗ — KYC/AML, деловая цель операции, банковский комплаенс.</li><li>КоАП РФ и УК РФ ст. 189 — блок ответственности за нарушения валютного и экспортного контроля.</li><li>OFAC / EU / UK / UN / BIS — санкционный и экспортный скрининг при иностранном элементе.</li></ul></div>
+  <div class="legal-report-card"><h5>Выявленные red flags</h5><ul><li>${dual?'Товарная позиция имеет признаки dual-use / controlled item.':'По товару требуется сохранить обоснование отсутствия dual-use признаков.'}</li><li>${['usd','eur'].includes(selVal('w_currency'))?'USD/EUR повышают риск проверки банком-корреспондентом.':'Выбранная валюта снижает риск западной корреспондентской блокировки, но не отменяет AML/KYC.'}</li><li>Транзитная юрисдикция требует подтверждения экономической логики маршрута.</li><li>Структура владения требует подтверждения UBO и отсутствия санкционного контроля.</li></ul></div>
+  <div class="legal-report-card"><h5>Документы к запросу</h5><ul><li>Выписка из реестра, карточка компании, UBO declaration.</li><li>Контракт, инвойс, спецификация, код ТН ВЭД, описание товара.</li><li>End-User Certificate / End-User Statement при dual-use риске.</li><li>Транспортные документы, no re-export undertaking, платежные документы.</li></ul></div>
+  <div class="legal-report-card"><h5>Решение по сделке</h5><ul><li>${edd?'Proceed only after Enhanced Due Diligence.':'Proceed with Standard Due Diligence.'}</li><li>До закрытия red flags не присваивать статус low risk.</li><li>Сохранить evidence trail: источники, дату проверки, документы и версию модели.</li></ul></div>
+ </div>
+ <div class="legal-note">Досье является демонстрационным результатом MVP. Для реального режима необходим backend, API к реестрам и санкционным спискам, журнал действий и проверка специалистом.</div>
+ </div>`;
+ document.getElementById('wizDossierOut').innerHTML=html; goStep(5);
+};
+
+// Enhanced payment checker
+const oldCheckPaymentCorridor = checkPaymentCorridor;
+checkPaymentCorridor = function(){
+ const from=selVal('pc_bankfrom'), to=selVal('pc_bankto'), curr=selVal('pc_currency'), nature=selText('pc_nature');
+ const sdn=['ru_gazp','ru_vtb'].includes(from), west=['de_db','us_jpmc'].includes(to), hard=['usd','eur'].includes(curr);
+ let prob=82; if(sdn) prob-=48; if(hard) prob-=18; if(west) prob-=20; if(['cny','rub','aed'].includes(curr)) prob+=8; prob=Math.max(4,Math.min(96,prob));
+ const color=riskColor(100-prob), label=prob>65?'вероятно пройдет после стандартной проверки':prob>35?'вероятен manual review / request for documents':'высокая вероятность отказа или блокировки';
+ document.getElementById('pc_result').innerHTML=`<div class="corridor-result"><div class="prof-status"><div><b>Платежный вывод</b><p style="margin:4px 0 0">${label}. Операция: ${nature}.</p></div><div class="prof-score" style="color:${prob>65?'var(--green)':prob>35?'var(--gold)':'var(--red)'}">${prob}%</div></div><div class="corridor-bar"><div class="corridor-fill" style="width:${prob}%;background:${prob>65?'var(--green)':prob>35?'var(--gold)':'var(--red)'}"></div></div><div class="prof-grid"><div class="prof-card"><h5>173-ФЗ</h5><ul><li>Проверить документы валютного контроля.</li><li>Сверить сумму, назначение и контракт.</li></ul></div><div class="prof-card"><h5>115-ФЗ / AML</h5><ul><li>Подтвердить деловую цель операции.</li><li>Оценить профиль клиента и товара.</li></ul></div><div class="prof-card"><h5>Sanctions exposure</h5><ul><li>${sdn?'Банк-отправитель имеет SDN-риск.':'SDN-риск банка-отправителя по сценарию не задан.'}</li><li>${west?'Получатель — западный банк: повышенный sanctions screening.':'Получатель не является западным банком по сценарию.'}</li></ul></div><div class="prof-card"><h5>Документы</h5><ul><li>Контракт, инвойс, спецификация.</li><li>Письмо о деловой цели платежа.</li><li>Подтверждение конечного пользователя.</li></ul></div></div></div>`;
+};
+
+// Enhanced route builder
+const oldBuildRoute = buildRoute;
+buildRoute = function(){ oldBuildRoute(); const res=document.getElementById('rr_result'); if(res){ res.insertAdjacentHTML('beforeend', `<div class="prof-grid" style="margin-top:14px"><div class="prof-card"><h5>Юридическая логика маршрута</h5><ul><li>Проверяется не только география, но и экономическая обоснованность транзита.</li><li>Для dual-use товара требуется end-use / end-user verification.</li></ul></div><div class="prof-card"><h5>Договорные меры</h5><ul><li>Добавить no re-export clause.</li><li>Запросить подтверждение конечного назначения.</li></ul></div></div>`); }};
+
+// Larger live-check result override
+const oldRunRealtimeCheck = runRealtimeCheck;
+runRealtimeCheck = function(){ oldRunRealtimeCheck(); const r=document.getElementById('rt_result'); if(r){ r.insertAdjacentHTML('beforeend', `<div class="api-note"><strong>Переход к настоящему real-time:</strong> для production-версии Aegis нужен backend-прокси, подключение к API ФНС/коммерческому провайдеру, регулярная загрузка OFAC/EU/UK/UN/BIS списков, кэширование результатов и журнал доказательств проверки.</div>`); }};
+</script>
+
+<script>
+const AEGIS_API = (window.AEGIS_API || 'http://localhost:8000/api');
+async function aegisPost(path, payload){
+  const r = await fetch(AEGIS_API + path, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
+  if(!r.ok) throw new Error(await r.text());
+  return await r.json();
+}
+function flagHtml(flags){
+  if(!flags || !flags.length) return '<div class="flag-item flag-green"><div class="flag-text"><strong>Существенных red flags не выявлено.</strong><br>Достаточно стандартного KYC-файла и сохранения evidence trail.</div></div>';
+  return flags.map(f=>`<div class="flag-item ${f.level==='critical'||f.level==='high'?'flag-red':f.level==='medium'?'flag-yellow':'flag-green'}"><div class="flag-text"><strong>${escapeHtml(f.title)}</strong><br>${escapeHtml(f.description)}<br><small>Документы: ${escapeHtml((f.requested_documents||[]).join(', ')||'стандартный KYC')}</small></div></div>`).join('');
+}
+function evidenceHtml(e){
+  return (e||[]).slice(0,8).map(x=>`<button type="button" class="source-action" onclick="openSourceDashboard('${escapeHtml(x.source).replace(/'/g,'&#39;')}')"><span>${escapeHtml(x.source)}<br><small>${escapeHtml(x.status||'ready')}</small></span><i class="ready-dot"></i></button>`).join('');
+}
+
+window.runRealtimeCheck = async function(){
+  const out = document.getElementById('realtime_result') || document.getElementById('liveResult') || document.querySelector('.check-result');
+  const inn = cleanTextValue('rt_inn') || cleanTextValue('live_inn') || cleanTextValue('inn') || '7707083893';
+  const name = cleanTextValue('rt_name') || cleanTextValue('live_name') || cleanTextValue('name') || ''; 
+  if(!out) return;
+  out.innerHTML = '<span class="check-status">Проверка источников...</span><h3>Юридический профиль контрагента</h3>';
+  try{
+    const data = await aegisPost('/counterparty/check', {inn_or_ogrn: inn, name, purpose:'Первичный legal due diligence'});
+    out.innerHTML = `<span class="check-status">risk score ${data.score}/100</span>
+      <h3>Юридический профиль контрагента</h3>
+      <div class="prof-status"><b>${escapeHtml(data.profile.name || name)}</b><span class="prof-score">${data.score}%</span></div>
+      <div class="prof-grid">
+        <div class="prof-card"><h5>Регистрационные сведения</h5><ul><li>ИНН: ${escapeHtml(data.profile.inn||'—')}</li><li>ОГРН: ${escapeHtml(data.profile.ogrn||'—')}</li><li>Статус: ${escapeHtml(data.profile.status||'—')}</li><li>Руководитель: ${escapeHtml(data.profile.director||'—')}</li></ul></div>
+        <div class="prof-card"><h5>Юридический вывод</h5><p>${escapeHtml(data.legal_conclusion.summary)}</p><div class="tag-row"><span class="risk-tag ${data.legal_conclusion.can_continue_without_edd?'risk-ok':'risk-bad'}">${data.legal_conclusion.decision}</span></div></div>
+      </div>
+      <div class="check-section"><h4>Red flags</h4>${flagHtml(data.red_flags)}</div>
+      <div class="check-section"><h4>Evidence trail</h4><div class="source-links">${evidenceHtml(data.evidence)}</div></div>`;
+  }catch(e){ out.innerHTML = `<span class="check-status">backend недоступен</span><p>Запустите FastAPI backend на localhost:8000. Ошибка: ${escapeHtml(e.message)}</p>`; }
+}
+
+window.analyzeShadow = async function(){
+  const out=document.getElementById('sf_result'); if(!out) return;
+  const req={
+    name_or_imo: cleanTextValue('sf_name') || 'ARCTIC SUN (IMO 9547821)',
+    flag: selVal('sf_flag') || 'pa',
+    ais_gap: !!document.getElementById('sf_ais')?.checked,
+    flag_changes: !!document.getElementById('sf_flag_chg')?.checked,
+    opaque_ownership: !!document.getElementById('sf_opaque')?.checked,
+    sts_operations: !!document.getElementById('sf_sts')?.checked,
+    non_western_insurance: !!document.getElementById('sf_ins')?.checked
+  };
+  out.innerHTML='<div class="prof-status"><b>Проверка AIS/IMO профиля...</b></div>';
+  try{
+    const data=await aegisPost('/vessel/check', req);
+    out.innerHTML=`<div class="prof-status"><div><b>${escapeHtml(req.name_or_imo)}</b><br><span>Флаг: ${escapeHtml(selText('sf_flag'))}</span></div><span class="prof-score">${data.score}%</span></div>
+    <div class="tag-row"><span class="risk-tag ${data.score>70?'risk-bad':data.score>45?'risk-warn':'risk-ok'}">${riskLabel(data.score)}</span><span class="risk-tag risk-blue">${data.red_flags.length} active indicators</span></div>
+    ${flagHtml(data.red_flags)}
+    <div class="sf-route-meta"><div class="sf-meta-card"><small>режим</small><span>Live API-ready</span></div><div class="sf-meta-card"><small>точек маршрута</small><span>${data.route.length}</span></div><div class="sf-meta-card"><small>решение</small><span>${data.legal_conclusion.can_continue_without_edd?'Standard DD':'EDD'}</span></div></div>`;
+    const wrap=document.getElementById('sf_map_wrap'); if(wrap) wrap.style.display='block';
+    setTimeout(()=>renderVesselMap(data.route, data.score),80);
+  }catch(e){ out.innerHTML=`<div class="prof-status"><b>Backend недоступен</b><span>${escapeHtml(e.message)}</span></div>`; }
+}
+function renderVesselMap(route, score){
+  const el=document.getElementById('vesselMap'); if(!el || !window.L) return;
+  if(window.vesselLeafletMap){ window.vesselLeafletMap.remove(); window.vesselLeafletMap=null; }
+  const map=L.map('vesselMap', {scrollWheelZoom:false}).setView([route[0].lat, route[0].lon], 5);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:12, attribution:'© OpenStreetMap'}).addTo(map);
+  const latlngs=route.map(p=>[p.lat,p.lon]);
+  L.polyline(latlngs,{color: score>70?'#c2413b':score>45?'#d97706':'#0f8b6f', weight:4, dashArray: score>55?'8 8':null}).addTo(map);
+  route.forEach((p,i)=>L.circleMarker([p.lat,p.lon],{radius:i===0||i===route.length-1?7:5,color:'#244f9e',fillColor:'#fff',fillOpacity:1,weight:3}).bindPopup(p.name).addTo(map));
+  map.fitBounds(latlngs,{padding:[28,28]}); window.vesselLeafletMap=map;
+}
+
+const oldPayment = window.checkPaymentCorridor;
+window.checkPaymentCorridor = async function(){
+  const out=document.getElementById('pc_result'); if(!out) return oldPayment && oldPayment();
+  const req={sender_bank: selText('pc_bankfrom'), receiver_bank: selText('pc_bankto'), currency: selVal('pc_currency'), operation_type: selVal('pc_nature'), amount:0, goods:''};
+  out.innerHTML='<div class="prof-status"><b>Проверка платёжного коридора...</b></div>';
+  try{ const d=await aegisPost('/payment/check', req); out.innerHTML=`<div class="prof-status"><b>${escapeHtml(d.legal_conclusion.decision)}</b><span class="prof-score">${d.score}%</span></div>${flagHtml(d.red_flags)}<div class="prof-card"><h5>Юридический вывод</h5><p>${escapeHtml(d.legal_conclusion.summary)}</p></div>`; }catch(e){ if(oldPayment) return oldPayment(); }
+}
+const oldRoute=window.buildRoute;
+window.buildRoute = async function(){
+  const out=document.getElementById('rr_result'); if(!out) return oldRoute && oldRoute();
+  const req={origin:selVal('rr_from'), transit_1:selVal('rr_t1'), transit_2:selVal('rr_t2'), destination:selVal('rr_dest'), goods_category:selVal('rr_goods')};
+  out.innerHTML='<div class="prof-status"><b>Анализ маршрута...</b></div>';
+  try{ const d=await aegisPost('/route/check', req); out.innerHTML=`<div class="route-visual"><div class="prof-status"><b>Максимальный риск маршрута</b><span class="prof-score">${d.score}%</span></div><div class="tag-row"><span class="risk-tag risk-blue">${selText('rr_from')}</span><span class="risk-tag risk-warn">${selText('rr_t1')}</span><span class="risk-tag risk-blue">${selText('rr_dest')}</span></div></div>${flagHtml(d.red_flags)}<div class="prof-card"><h5>Юридический вывод</h5><p>${escapeHtml(d.legal_conclusion.summary)}</p></div>`; }catch(e){ if(oldRoute) return oldRoute(); }
+}
+</script>
+
+<style>
+/* --- AEGIS v8: embedded compliance source dashboard --- */
+.source-action{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:14px 16px;border-radius:14px;border:1px solid var(--border);background:#fff;color:var(--text);font:600 15px var(--font-body);cursor:pointer;transition:.2s;text-align:left;box-shadow:0 8px 18px rgba(20,35,55,.04)}
+.source-action:hover{border-color:var(--accent2);transform:translateY(-1px);box-shadow:0 14px 26px rgba(20,35,55,.08)}
+.source-action small{font:700 11px var(--font-mono);color:var(--text-dimmer);letter-spacing:.4px;text-transform:uppercase}.source-action span{display:block}.source-action .ready-dot{width:8px;height:8px;border-radius:99px;background:var(--green);box-shadow:0 0 0 4px rgba(15,139,111,.12)}
+.aegis-modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(17,24,39,.46);backdrop-filter:blur(8px);z-index:9999}.aegis-modal.open{display:flex}.aegis-modal-card{width:min(920px,96vw);max-height:88vh;overflow:auto;background:#fff;border:1px solid rgba(20,35,55,.16);border-radius:22px;box-shadow:0 34px 90px rgba(10,20,35,.30)}.aegis-modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;padding:24px 26px;border-bottom:1px solid var(--border);background:linear-gradient(180deg,#fff,#f7f9fc)}.aegis-modal-title{font:800 24px var(--font-display);letter-spacing:-.6px}.aegis-modal-sub{margin-top:6px;color:var(--text-dim);font-size:15px}.aegis-close{width:38px;height:38px;border-radius:12px;border:1px solid var(--border);background:#fff;cursor:pointer;font-size:20px;color:var(--text-dim)}.aegis-modal-body{padding:24px 26px}.source-score-box{display:flex;align-items:center;justify-content:space-between;gap:18px;border:1px solid var(--border);border-radius:18px;background:#f8fafc;padding:18px 20px;margin-bottom:18px}.source-score-box b{font-size:17px}.source-score{font:800 38px var(--font-display);color:var(--accent)}.source-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.source-detail-card{border:1px solid var(--border);border-radius:16px;background:#fff;padding:17px}.source-detail-card h4{font:800 17px var(--font-display);margin-bottom:10px}.kv-row{display:flex;justify-content:space-between;gap:16px;padding:9px 0;border-bottom:1px dashed rgba(20,35,55,.12);font-size:15px}.kv-row:last-child{border-bottom:none}.kv-row span:first-child{color:var(--text-dim)}.doc-list{margin:0;padding-left:18px}.doc-list li{margin:7px 0;color:var(--text-dim);font-size:15px}.modal-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}.modal-btn{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:10px 16px;border-radius:12px;border:1px solid var(--border);background:#fff;color:var(--text);text-decoration:none;font:700 14px var(--font-body);cursor:pointer}.modal-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}.modal-btn:hover{filter:brightness(.98);transform:translateY(-1px)}
+@media(max-width:760px){.source-detail-grid{grid-template-columns:1fr}.aegis-modal{padding:12px}.aegis-modal-head,.aegis-modal-body{padding:18px}.source-score-box{align-items:flex-start;flex-direction:column}.source-score{font-size:32px}}
+</style>
+<div class="aegis-modal" id="sourceModal" aria-hidden="true">
+  <div class="aegis-modal-card" role="dialog" aria-modal="true">
+    <div class="aegis-modal-head">
+      <div><div class="aegis-modal-title" id="sourceModalTitle">Источник</div><div class="aegis-modal-sub" id="sourceModalSub">Профиль проверки</div></div>
+      <button class="aegis-close" onclick="closeSourceModal()">×</button>
+    </div>
+    <div class="aegis-modal-body" id="sourceModalBody"></div>
+  </div>
+</div>
+<script>
+(function(){
+  const map = { 'ФНС / ЕГРЮЛ':'fns', 'Федресурс':'fedresurs', 'КАД Арбитр':'kad', 'ФССП':'fssp', 'РНП':'rnp', 'Санкционные списки':'sanctions', 'OFAC':'sanctions', 'EU':'sanctions', 'UK':'sanctions', 'UN':'sanctions', 'BIS':'sanctions' };
+  function sourceKey(source){ const s=(source||'').toLowerCase(); if(s.includes('фнс')||s.includes('егрюл')) return 'fns'; if(s.includes('фед')) return 'fedresurs'; if(s.includes('кад')||s.includes('арбитр')) return 'kad'; if(s.includes('фссп')) return 'fssp'; if(s.includes('рнп')) return 'rnp'; if(s.includes('ofac')||s.includes('eu')||s.includes('uk')||s.includes('un')||s.includes('bis')||s.includes('санкц')) return 'sanctions'; return map[source] || 'fns'; }
+  function currentInn(){ return (document.getElementById('rt_inn')?.value || document.getElementById('live_inn')?.value || document.getElementById('inn')?.value || '7707083893').trim(); }
+  function currentName(){ return (document.getElementById('rt_name')?.value || document.getElementById('live_name')?.value || document.getElementById('name')?.value || 'ПАО Сбербанк').trim(); }
+  window.closeSourceModal = function(){ document.getElementById('sourceModal')?.classList.remove('open'); };
+  window.openSourceDashboard = async function(source){
+    const key = sourceKey(source);
+    const modal = document.getElementById('sourceModal'); const title = document.getElementById('sourceModalTitle'); const sub = document.getElementById('sourceModalSub'); const body = document.getElementById('sourceModalBody');
+    if(!modal || !body) return;
+    modal.classList.add('open'); title.textContent = source; sub.textContent = 'Запрос к backend adapter · evidence trail';
+    body.innerHTML = '<div class="source-score-box"><b>Загрузка данных источника...</b><span class="source-score">...</span></div>';
+    try{
+      const data = await aegisPost('/registry/source', {source:key, inn_or_ogrn:currentInn(), name:currentName()});
+      title.textContent = data.title || source;
+      const color = data.risk >= 60 ? 'var(--red)' : data.risk >= 30 ? 'var(--gold)' : 'var(--green)';
+      body.innerHTML = `<div class="source-score-box"><div><b>${escapeHtml(data.status)}</b><p style="margin:6px 0 0;color:var(--text-dim)">${escapeHtml(data.summary)}</p></div><div class="source-score" style="color:${color}">${data.risk}%</div></div>
+        <div class="source-detail-grid">
+          <div class="source-detail-card"><h4>Результаты проверки</h4>${(data.findings||[]).map(x=>`<div class="kv-row"><span>${escapeHtml(x.label)}</span><b>${escapeHtml(x.value)}</b></div>`).join('')}</div>
+          <div class="source-detail-card"><h4>Документы / действия</h4><ul class="doc-list">${(data.documents||[]).map(d=>`<li>${escapeHtml(d)}</li>`).join('')}</ul></div>
+        </div>
+        <div class="modal-actions"><button class="modal-btn primary" onclick="closeSourceModal()">Сохранить в evidence trail</button>${data.official_url ? `<a class="modal-btn" target="_blank" rel="noopener" href="${data.official_url}">Открыть официальный источник</a>` : ''}</div>`;
+    }catch(e){ body.innerHTML = `<div class="source-score-box"><b>Источник недоступен</b><span class="source-score" style="color:var(--red)">!</span></div><p>Backend adapter не вернул данные. Проверьте, что FastAPI работает на localhost:8000. Ошибка: ${escapeHtml(e.message||e)}</p>`; }
+  };
+  window.evidenceHtml = function(e){
+    return (e||[]).slice(0,8).map(x=>`<button type="button" class="source-action" onclick="openSourceDashboard('${escapeHtml(x.source).replace(/'/g,'&#39;')}')"><span>${escapeHtml(x.source)}<br><small>${escapeHtml(x.status||'ready')}</small></span><i class="ready-dot"></i></button>`).join('');
+  };
+  function enhanceStaticLinks(){
+    const pairs = [['link_fns','ФНС / ЕГРЮЛ'],['link_fedresurs','Федресурс'],['link_kad','КАД Арбитр'],['link_fssp','ФССП'],['link_rnp','РНП'],['link_sanctions','Санкционные списки']];
+    pairs.forEach(([id,label])=>{ const a=document.getElementById(id); if(a){ a.removeAttribute('href'); a.classList.add('source-action'); a.onclick=(ev)=>{ev.preventDefault(); openSourceDashboard(label);}; }});
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', enhanceStaticLinks); else enhanceStaticLinks();
+})();
+</script>
+
+</body>
+</html>
